@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",       // Where compiled JavaScript files will be placed
+    "rootDir": "./",          // The root directory of your TypeScript files
+    "target": "ES2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "experimentalDecorators": true, // Enable decorator support
+    "emitDecoratorMetadata": true,  // Emit decorator metadata
+    "strict": true,
+    "useDefineForClassFields": false, // Important for older versions
+    "noImplicitAny": true,
+    "skipLibCheck": true
+    
+  },
+  "include": ["*.ts"],        // Include all TypeScript files in the root directory
+  "exclude": ["node_modules"]
+}

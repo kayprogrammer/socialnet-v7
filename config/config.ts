@@ -1,0 +1,39 @@
+import dotenv from 'dotenv';
+import { z } from 'zod';
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Define the schema for your environment variables
+const envSchema = z.object({
+  SITE_NAME: z.string(),
+  SECRET_KEY: z.string(),
+  EMAIL_OTP_EXPIRE_SECONDS: z.string().transform(Number),
+  ACCESS_TOKEN_EXPIRY: z.string(),
+  REFRESH_TOKEN_EXPIRY: z.string(),
+  FRONTEND_URL: z.string().url(),
+  FIRST_SUPERUSER_EMAIL: z.string().email(),
+  FIRST_SUPERUSER_PASSWORD: z.string(),
+  FIRST_CLIENT_EMAIL: z.string().email(),
+  FIRST_CLIENT_PASSWORD: z.string(),
+  EMAIL_HOST_USER: z.string().email(),
+  EMAIL_HOST_PASSWORD: z.string(),
+  EMAIL_HOST: z.string(),
+  EMAIL_PORT: z.string().regex(/^\d+$/).transform(Number),
+  EMAIL_USE_SSL: z.string().transform((val) => val.toLowerCase() === 'true'),
+  DEFAULT_FROM_EMAIL: z.string().email(),
+  CORS_ALLOWED_ORIGINS: z.string().transform((origins) => origins.split(',')),
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
+  REDIS_URL: z.string().url(),
+  PORT: z.string().regex(/^\d+$/).transform(Number),
+  SOCKET_SECRET: z.string(),
+  MONGO_URI: z.string().url(),
+  SWAGGER_BASE_URL: z.string(),
+});
+
+// Validate and parse the environment variables
+const env = envSchema.parse(process.env);
+
+export default env;
