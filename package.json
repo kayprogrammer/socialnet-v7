@@ -13,11 +13,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/nodemailer": "^6.4.15",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.6.1",
+    "nodemailer": "^6.9.15",
     "reflect-metadata": "^0.2.2",
     "snakecase-keys": "^8.0.1",
     "swagger-jsdoc": "^6.2.8",
@@ -25,6 +28,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^4.17.21",
     "@types/mongoose": "^5.11.96",

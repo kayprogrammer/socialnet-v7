@@ -1,4 +1,4 @@
-import { Schema, model, Types } from 'mongoose';
+import mongoose, { Schema, model, Types } from 'mongoose';
 import { IBase, BaseSchema } from './base';
 import { randomStringGenerator } from './utils';
 
@@ -15,8 +15,8 @@ interface ICountry extends IBase {
 }
 // Create the Country schema
 const CountrySchema = new Schema<ICountry>({
-  name: { type: String, required: true, maxlength: 50 },
-  code: { type: String, required: true, maxlength: 50 },
+  name: { type: String, required: true },
+  code: { type: String, required: true },
 })
 
 // Merge BaseSchema
@@ -29,12 +29,12 @@ const Country = model<ICountry>('Country', CountrySchema);
 // Define the interface for the State model
 interface IState extends IBase {
   name: string;
-  code: string;
+  country: Types.ObjectId;
 }
 // Create the State schema
 const StateSchema = new Schema<IState>({
-  name: { type: String, required: true, maxlength: 50 },
-  code: { type: String, required: true, maxlength: 50 },
+  name: { type: String, required: true },
+  country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country', required: true },
 })
 
 // Merge BaseSchema
@@ -46,12 +46,12 @@ const State = model<IState>('State', StateSchema);
 // Define the interface for the City model
 interface ICity extends IBase {
   name: string;
-  code: string;
+  state: Types.ObjectId;
 }
 // Create the State schema
 const CitySchema = new Schema<ICity>({
   name: { type: String, required: true, maxlength: 50 },
-  code: { type: String, required: true, maxlength: 50 },
+  state: { type: mongoose.Schema.Types.ObjectId, ref: 'State', required: true },
 })
 
 // Merge BaseSchema
@@ -83,7 +83,7 @@ interface IUser extends IBase {
 const UserSchema = new Schema<IUser>({
   firstName: { type: String, required: true, maxlength: 50 },
   lastName: { type: String, required: true, maxlength: 50 },
-  username: { type: String, required: true, unique: true }, // For slug, you can generate it before saving
+  username: { type: String, unique: true, blank: true }, // For slug, you can generate it before saving
   email: { type: String, required: true, unique: true },
   avatar: { type: Schema.Types.ObjectId, ref: 'File', null: true, blank: true },
   termsAgreement: { type: Boolean, default: false },
@@ -106,9 +106,6 @@ const UserSchema = new Schema<IUser>({
 // Merge BaseSchema
 UserSchema.add(BaseSchema.obj);
 
-// Create the User model
-const User = model<IUser>('User', UserSchema);
-
 // Pre-save hook to generate a unique username
 UserSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('username') || !this.username) {
@@ -129,4 +126,7 @@ UserSchema.pre<IUser>('save', async function (next) {
   next();
 });
 
-export default User;
+// Create the User model
+const User = model<IUser>('User', UserSchema);
+
+export { Country, State, City, User, IUser };

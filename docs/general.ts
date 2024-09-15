@@ -1,5 +1,5 @@
 import { SiteDetailSchema } from "../schemas/general";
-import { generateSwaggerResponseExamples } from "./utils";
+import { generateSwaggerExample } from "./utils";
 import { ERROR_EXAMPLE_500, SUCCESS_STATUS } from "./base";
 
 export const siteDetailDocs = {
@@ -18,7 +18,7 @@ export const siteDetailDocs = {
                                 value: {
                                     status: SUCCESS_STATUS,
                                     message: "Site details fetched",
-                                    data: generateSwaggerResponseExamples(SiteDetailSchema)
+                                    data: generateSwaggerExample(SiteDetailSchema)
 
                                 },
                             },

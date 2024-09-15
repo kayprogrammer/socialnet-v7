@@ -14,8 +14,8 @@ export class CustomResponse {
     dataSchema?: new () => V
   ): ResponseBase & { data?: T } {
     let response: ResponseBase & { data?: T } = {
-      message,
-      status: "success"
+      status: "success",
+      message
     };
 
     if (dataSchema && data !== undefined) {
@@ -33,11 +33,13 @@ export class CustomResponse {
     return snakeCasedResponse;
   }
 
-  static error(message: string, code: string): ResponseBase {
-    return {
-      message,
+  static error(message: string, code: string, data?: Record<string,any>): ResponseBase {
+    var resp: ResponseBase & { data?: Record<string,any> } = {
       status: "failure",
-      code
+      code,
+      message,
     };
+    if (data) resp.data = data
+    return resp
   }
 }

@@ -1,4 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import { plainToInstance, ClassConstructor } from 'class-transformer';
+import { validate, ValidationError } from 'class-validator';
+import { CustomResponse } from "./utils";
 
 export class ErrorCode {
     static readonly UNAUTHORIZED_USER = "unauthorized_user";
@@ -30,11 +33,21 @@ export class RequestError extends Error {
         this.status = status;
         this.code = code;
         this.data = data;
+
+        // Set the prototype explicitly to maintain instanceof behavior
+        Object.setPrototypeOf(this, RequestError.prototype);
+
+        // Capture the stack trace (if available)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 }
 
-export class ValidationError extends RequestError {
-    constructor(message: string, data?: any) {
+export class ValidationErr extends RequestError {
+    constructor(field: string, field_message: string) {
+        let message = "Invalid Entry"
+        let data = {[field]: field_message}
         super(message, 422, ErrorCode.INVALID_ENTRY, data);
     }
 }
@@ -70,3 +83,25 @@ export const handleError = (err: RequestError, req: Request, res: Response, next
 
     res.status(status).json(errorResponse);
 };
+
+
+// Constrain T to be an object
+export const validationMiddleware = <T extends object>(type: ClassConstructor<T>) =>
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const instance = plainToInstance(type, req.body);
+        const errors: ValidationError[] = await validate(instance);
+        if (errors.length > 0) {
+            const formattedErrors = errors.reduce((acc, error) => {
+                if (error.constraints) {
+                    // Get the first constraint message
+                    const [firstConstraint] = Object.values(error.constraints);
+                    acc[error.property] = firstConstraint;
+                }
+                return acc;
+            }, {} as Record<string, string>);
+            const errResp = CustomResponse.error("Invalid Entry", ErrorCode.INVALID_ENTRY, formattedErrors)
+            res.status(422).json(errResp)
+            return
+        }
+        next();
+    };

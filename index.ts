@@ -3,7 +3,10 @@ import swaggerUi from 'swagger-ui-express';
 import env from './config/config';
 import connectDB from './config/db';
 import generalRouter from './controllers/general';
+import authRouter from './controllers/auth';
 import { siteDetailDocs } from './docs/general';
+import { registerDocs } from './docs/auth';
+import { handleError } from './config/handlers';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -14,7 +17,7 @@ const swaggerDocument = {
   servers: [{ url: '/api/v7' }],
   paths: {
       '/general/site-detail': siteDetailDocs,
-      // Other paths...
+      '/auth/register': registerDocs,
   },
   components: {
       // Security schemes, schemas, etc.
@@ -22,13 +25,16 @@ const swaggerDocument = {
 };
 
 const app: Application = express();
+app.use(express.json());
 
 // Connect DB
 connectDB()
 
 // Register Routes
 app.use("/api/v7/general", generalRouter)
+app.use("/api/v7/auth", authRouter)
 
+app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(env.PORT, () => {
