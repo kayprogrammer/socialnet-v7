@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { IUser, User } from '../models/accounts';
+import ENV from '../config/config';
 // import { UserProfile } from './models/UserProfile';
 
 // const findUsersInSameCity = async (userId: string) => {
@@ -40,19 +41,18 @@ import { IUser, User } from '../models/accounts';
 // };
 
 const createUser = async (userData: Record<string,any>, isStaff: boolean = false) => {
-    // Destructure password out of userData to avoid spreading it
     const { password, ...otherUserData } = userData;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({ password: hashedPassword, isStaff, ...otherUserData });
+    const otpExpiry = new Date(new Date().getTime() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000);
+    const newUser = new User({ password: hashedPassword, isStaff, otpExpiry, ...otherUserData });
     await newUser.save();
     return newUser; 
 };
 
 const createOtp = async (user: IUser): Promise<number> => {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
-    const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // OTP expiry in 15 minutes
+    const otpExpiry = new Date(Date.now() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000); // OTP expiry in 15 minutes
 
     try {
         await User.updateOne(

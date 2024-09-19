@@ -76,7 +76,7 @@ interface IUser extends IBase {
   dob?: Date;
   tokens: IToken[];
   otp?: number;
-  otpExpiry?: Date; 
+  otpExpiry: Date; 
 }
 
 // Create the User schema

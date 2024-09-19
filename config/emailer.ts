@@ -75,8 +75,10 @@ export const sendEmail = async (type: string, user: any): Promise<void> => {
     };
 
     try {
-        await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully');
+        // Send email in background. Using a tool like bull queue will be better for intensive cases
+        process.nextTick(async () => {
+            await transporter.sendMail(mailOptions);
+        })
     } catch (error) {
         console.error('Error sending email:', error);
         throw error;

@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
 import { Example } from "./utils";
-import { IsEmail, IsNotEmpty, Length } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, Length, Max, Min } from "class-validator";
+import { EmailSchema } from "./base";
 
 export class RegisterSchema {
     @Example('John')
@@ -26,4 +27,13 @@ export class RegisterSchema {
     @Example(true)
     @Expose()
     termsAgreement?: boolean;
+}
+
+export class VerifyEmailSchema extends EmailSchema {
+    @Example(123456)
+    @Expose()
+    @Min(100000)
+    @Max(999999)
+    @IsNumber()
+    otp?: number;
 }

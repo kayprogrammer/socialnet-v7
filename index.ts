@@ -5,7 +5,7 @@ import connectDB from './config/db';
 import generalRouter from './controllers/general';
 import authRouter from './controllers/auth';
 import { siteDetailDocs } from './docs/general';
-import { registerDocs } from './docs/auth';
+import { registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from './docs/auth';
 import { handleError } from './config/handlers';
 
 const swaggerDocument = {
@@ -18,6 +18,8 @@ const swaggerDocument = {
   paths: {
       '/general/site-detail': siteDetailDocs,
       '/auth/register': registerDocs,
+      '/auth/verify-email': verifyEmailDocs,
+      '/auth/resend-verification-email': resendVerificationEmailDocs,
   },
   components: {
       // Security schemes, schemas, etc.

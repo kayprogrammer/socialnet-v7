@@ -9,8 +9,7 @@ export class ErrorCode {
     static readonly SERVER_ERROR = "server_error";
     static readonly INVALID_ENTRY = "invalid_entry";
     static readonly INCORRECT_EMAIL = "incorrect_email";
-    static readonly INCORRECT_OTP = "incorrect_otp";
-    static readonly EXPIRED_OTP = "expired_otp";
+    static readonly INVALID_OTP = "invalid_otp";
     static readonly INVALID_AUTH = "invalid_auth";
     static readonly INVALID_TOKEN = "invalid_token";
     static readonly INVALID_CREDENTIALS = "invalid_credentials";
@@ -56,6 +55,12 @@ export class ValidationErr extends RequestError {
 export class UnauthorizedError extends RequestError {
     constructor(message: string) {
         super(message, 401, ErrorCode.UNAUTHORIZED_USER);
+    }
+}
+
+export class NotFoundError extends RequestError {
+    constructor(message: string) {
+        super(message, 404, ErrorCode.NON_EXISTENT);
     }
 }
 
