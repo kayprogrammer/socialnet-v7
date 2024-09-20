@@ -4,7 +4,6 @@ import fs from 'fs';
 import ENV from '../config/config'
 import { IUser } from '../models/accounts';
 import { createOtp } from "../managers/users"
-import { RequestError, ServerErr } from './handlers';
 
 const transporter: Transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -26,7 +25,7 @@ const readTemplate = (filePath: string, replacements: Record<string, string>): s
     return htmlContent;
 };
 
-const getEmailDetails = async (type: string, user: IUser): Promise<{ templatePath: string; subject: string; context: Record<string, string> }> => {
+const getEmailDetails = async (type: "activate" | "reset" | "reset-success" | "welcome", user: IUser): Promise<{ templatePath: string; subject: string; context: Record<string, string> }> => {
     let templatePath = 'welcome.html';
     let subject = 'Welcome!';
     let context: Record<string,any> = { name: user.firstName };
@@ -63,7 +62,7 @@ const getEmailDetails = async (type: string, user: IUser): Promise<{ templatePat
  * @returns {Promise<void>} - A promise that resolves when the email is sent.
  * @throws {Error} - Throws an error if sending the email fails.
  */
-export const sendEmail = async (type: string, user: any): Promise<void> => {
+export const sendEmail = async (type: "activate" | "reset" | "reset-success" | "welcome", user: any): Promise<void> => {
     const { templatePath, subject, context } = await getEmailDetails(type, user);
 
     const htmlContent = readTemplate(templatePath, context);
@@ -75,13 +74,11 @@ export const sendEmail = async (type: string, user: any): Promise<void> => {
         html: htmlContent,
     };
 
-    try {
-        // Send email in background. Using a tool like bull queue will be better for intensive cases
-        process.nextTick(async () => {
-            await transporter.sendMail(mailOptions);
-        })
-    } catch (error) {
-        console.error('Error sending email:', error);
-        throw new ServerErr();
-    }
+    // Send email in background. Using a tool like bull queue will be better for intensive cases
+    process.nextTick(async() => {
+        await transporter.sendMail(mailOptions)
+        .catch(error => {
+            console.error('Error sending email:', error.message);
+        });
+    })
 };

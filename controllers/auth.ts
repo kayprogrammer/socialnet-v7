@@ -1,12 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../config/utils";
-import { User } from "../models/accounts";
-import { ErrorCode, NotFoundError, RequestError, ValidationErr, validationMiddleware } from "../config/handlers";
-import { createUser, hashPassword } from "../managers/users";
+import { IUser, User } from "../models/accounts";
+import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config/handlers";
+import { validationMiddleware } from "../middlewares/error"
+import { checkPassword, createAccessToken, createRefreshToken, createUser, hashPassword, verifyRefreshToken } from "../managers/users";
 import { EmailSchema } from "../schemas/base";
-import { RegisterSchema, SetNewPasswordSchema, VerifyEmailSchema } from "../schemas/auth";
+import { LoginSchema, RefreshTokenSchema, RegisterSchema, SetNewPasswordSchema, TokensSchema, VerifyEmailSchema } from "../schemas/auth";
 import { sendEmail } from "../config/emailer"
-import bcrypt from 'bcryptjs';
+import { authMiddleware } from "../middlewares/auth";
 
 const authRouter = Router();
 
@@ -155,9 +156,86 @@ authRouter.post('/set-new-password', validationMiddleware(SetNewPasswordSchema),
             { _id: user._id },
             { $set: { otp: null, otpExpiry: null, password: await hashPassword(password as string) } }
         );
-        // Send welcome email
+        // Send password reset success email
         await sendEmail("reset-success", user);
         return res.status(200).json(CustomResponse.success('Password reset successful'))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /login
+ * @description Generates access and refresh tokens for the user based on login credentials.
+ * @returns {Response} - JSON response with success message.
+ */
+authRouter.post('/login', validationMiddleware(LoginSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userData: LoginSchema = req.body;
+
+        const { email, password } = userData;
+        const user = await User.findOne({ email })
+        if (!user || !(await checkPassword(user, password as string))) throw new RequestError("Invalid credentials!", 401, ErrorCode.INVALID_CREDENTIALS);
+        if (!user.isEmailVerified) throw new RequestError("Verify your email first", 401, ErrorCode.UNVERIFIED_USER);
+
+        // Generate tokens
+        const access = createAccessToken(user.id) 
+        const refresh = createRefreshToken() 
+
+        // Update user with access tokens
+        let tokens = { access, refresh }
+        await User.updateOne(
+            { _id: user._id },
+            { $push: { tokens } }
+        );
+        return res.status(201).json(CustomResponse.success('Login successful', tokens, TokensSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /refresh
+ * @description Generates new access and refresh tokens for the user based on refresh token.
+ * @returns {Response} - JSON response with success message.
+ */
+authRouter.post('/refresh', validationMiddleware(RefreshTokenSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const refreshToken: string = req.body.refresh;
+        const user = await User.findOne({ "tokens.refresh": refreshToken });
+        if (!user || !(await verifyRefreshToken(refreshToken))) throw new RequestError("Refresh token is invalid or expired!", 401, ErrorCode.INVALID_TOKEN);
+
+        // Generate new tokens
+        const access = createAccessToken(user.id) 
+        const refresh = createRefreshToken() 
+
+        // Update user with access tokens
+        let tokens = { access, refresh }
+        await User.updateOne(
+            { _id: user._id, "tokens.refresh": refreshToken },
+            { $set: { "tokens.$": tokens } }
+        );
+        return res.status(201).json(CustomResponse.success('Tokens refresh successful', tokens, TokensSchema))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /logout
+ * @description Logout users by invalidating the current access and refresh tokens
+ * @returns {Response} - JSON response with success message.
+ */
+authRouter.get('/logout', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        const authorization = req.headers.authorization as string
+        const token = authorization.replace('Bearer ', '');
+        await User.updateOne(
+            { _id: user._id, "tokens.access": token },
+            { $pull: { tokens: { access: token } } }
+        );
+        return res.status(200).json(CustomResponse.success("Logout Successful"))
     } catch (error) {
         next(error)
     }

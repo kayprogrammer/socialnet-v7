@@ -1,6 +1,10 @@
 import bcrypt from 'bcryptjs';
 import { IUser, User } from '../models/accounts';
 import ENV from '../config/config';
+import { Types } from 'mongoose';
+import * as jwt from "jsonwebtoken";
+import { randomStr } from '../config/utils';
+
 // import { UserProfile } from './models/UserProfile';
 
 // const findUsersInSameCity = async (userId: string) => {
@@ -75,4 +79,52 @@ const createOtp = async (user: IUser): Promise<number> => {
     return otp
 };
 
-export { createUser, createOtp, hashPassword, checkPassword };
+// Authentication Tokens
+const ALGORITHM = "HS256"
+const createAccessToken = (userId: Types.ObjectId) => {
+    let payload = { userId, exp: Math.floor(Date.now() / 1000) + (ENV.ACCESS_TOKEN_EXPIRY * 60)}
+    return jwt.sign(payload, ENV.SECRET_KEY, { algorithm: ALGORITHM });
+}
+
+const createRefreshToken = () => {
+    const payload: Record<string, string|number> = { data: randomStr(10), exp: Math.floor(Date.now() / 1000) + (ENV.REFRESH_TOKEN_EXPIRY * 60) }
+    return jwt.sign(payload, ENV.SECRET_KEY, { algorithm: ALGORITHM });
+}
+
+const verifyAsync = (token: string, secret: string) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, secret, {}, (err, payload) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(payload);
+            }
+        });
+    });
+}
+
+const verifyRefreshToken = async (token: string) => {
+    try {
+      const decoded = await verifyAsync(token, ENV.SECRET_KEY) as any;
+      return true
+    } catch (error) {
+        return false;
+    }
+}
+
+const decodeAuth = async (token: string): Promise<IUser | null> => {
+    try {
+      const decoded = await verifyAsync(token, ENV.SECRET_KEY) as { userId?: string };
+      const userId = decoded?.userId;
+        
+      if (!userId) {
+        return null;
+      }
+  
+      const user = await User.findOne({ _id: userId, "tokens.access": token });
+      return user;
+    } catch (error) {
+      return null;
+    }
+}
+export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth };

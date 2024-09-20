@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { plainToClass } from 'class-transformer';
 
-function generateSwaggerExample<T extends object>(cls: new () => T): Record<string, any> {
+function generateSwaggerExampleFromSchema<T extends object>(cls: new () => T): Record<string, any> {
     const examples: Record<string, any> = {};
     
     const instance = plainToClass(cls, {}) as T;
@@ -25,7 +25,7 @@ function generateSwaggerRequestExample<T extends object>(summary: string, schema
             examples: {
                 example1: {
                   summary: summary + " body example",
-                  value: generateSwaggerExample(schemaClass)
+                  value: generateSwaggerExampleFromSchema(schemaClass)
                 }
             }
         },
@@ -34,26 +34,31 @@ function generateSwaggerRequestExample<T extends object>(summary: string, schema
   }
 }
 
-function generateSwaggerResponseExample<T extends object>(description: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string): Record<string, any> {
+function generateSwaggerExampleValue<T extends object>(summary: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string): Record<string, any> {
   let responseValue = {
     status: status,
     message: message,
     ...(code && { code: code }),
-    ...(schemaClass && { data: generateSwaggerExample(schemaClass as new () => T) })
+    ...(schemaClass && { data: generateSwaggerExampleFromSchema(schemaClass as new () => T) })
   }
+  return {
+    summary: summary,
+    value: responseValue,
+  }
+}
+
+function generateSwaggerResponseExample<T extends object>(description: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string): Record<string, any> {
+  
   return {
     description: description,
     content: {
       'application/json': {
           examples: {
-              example1: {
-                summary: 'An example response',
-                value: responseValue,
-              },
+              example1: generateSwaggerExampleValue("An example response", status, message, schemaClass, code),
           },
       },
     },
   }
 }
 
-export { generateSwaggerRequestExample, generateSwaggerResponseExample }
+export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue }

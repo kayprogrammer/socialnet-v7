@@ -44,3 +44,33 @@ export class SetNewPasswordSchema extends VerifyEmailSchema {
     @Length(8, 50)
     password?: string;
 }
+
+export class LoginSchema {
+    @Example('johndoe@example.com')
+    @Expose()
+    @IsEmail({}, {message: "Enter a valid email address"})
+    email?: string;
+
+    @Example("password")
+    @Expose()
+    @Length(8, 50)
+    password?: string;
+}
+
+const TOKEN_EXAMPLE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+export class TokensSchema {
+    @Example(TOKEN_EXAMPLE)
+    @Expose()
+    access?: string;
+    
+    @Example(TOKEN_EXAMPLE)
+    @Expose()
+    refresh?: string;
+}
+
+export class RefreshTokenSchema {
+    @Example(TOKEN_EXAMPLE)
+    @Expose()
+    refresh?: string;
+}

@@ -1,8 +1,8 @@
 import { ErrorCode } from "../config/handlers";
-import { RegisterSchema, SetNewPasswordSchema, VerifyEmailSchema } from "../schemas/auth";
+import { LoginSchema, RefreshTokenSchema, RegisterSchema, SetNewPasswordSchema, VerifyEmailSchema } from "../schemas/auth";
 import { EmailSchema } from "../schemas/base";
-import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
-import { generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
+import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
+import { generateSwaggerExampleValue, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
 const tags = ['Auth']
 
@@ -79,4 +79,51 @@ const passwordResetDocs = {
     }
 };
 
-export { registerDocs, verifyEmailDocs, resendVerificationEmailDocs, passwordResetRequestEmailDocs, passwordResetDocs }
+const LOGIN_401 = generateSwaggerResponseExample('Invalid credentials', FAILURE_STATUS, "Invalid credentials!", null, ErrorCode.INVALID_CREDENTIALS)
+LOGIN_401.content["application/json"].examples.example2 = generateSwaggerExampleValue("Unverified User", FAILURE_STATUS, "Unverified User", null, ErrorCode.UNVERIFIED_USER)
+
+const loginDocs = {
+    post: {
+        tags: tags,
+        summary: 'Login A User',
+        description: "Generates access and refresh tokens for the user based on login credentials.",
+        requestBody: generateSwaggerRequestExample("Login", LoginSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Login Successful response', SUCCESS_STATUS, "Login successful"),
+            422: ERROR_EXAMPLE_422,
+            401: LOGIN_401,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+};
+
+const refreshTokenDocs = {
+    post: {
+        tags: tags,
+        summary: 'Refresh Auth Tokens',
+        description: "Generates new access and refresh tokens for the user based on refresh token.",
+        requestBody: generateSwaggerRequestExample("Refresh token", RefreshTokenSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Tokens refresh successful response', SUCCESS_STATUS, "Tokens refresh successful"),
+            422: ERROR_EXAMPLE_422,
+            401: generateSwaggerResponseExample('Invalid refresh token', FAILURE_STATUS, "Refresh token is invalid or expired!", null, ErrorCode.INVALID_TOKEN),
+            500: ERROR_EXAMPLE_500
+        }
+    }
+};
+
+const logoutDocs = {
+    get: {
+        tags: tags,
+        summary: 'Logout user',
+        description: "Logout users by invalidating the current access and refresh tokens",
+        security: [{ BearerAuth: [] }], // Require BearerAuth for this endpoint
+        responses: {
+            200: generateSwaggerResponseExample('Logout successful response', SUCCESS_STATUS, "Logout Successful"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+};
+
+export { registerDocs, verifyEmailDocs, resendVerificationEmailDocs, passwordResetRequestEmailDocs, passwordResetDocs, loginDocs, refreshTokenDocs, logoutDocs }

@@ -1,4 +1,4 @@
-import { passwordResetDocs, passwordResetRequestEmailDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
+import { loginDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
 import { siteDetailDocs } from "./general"
 
 export const SWAGGER_PATHS = {
@@ -8,5 +8,7 @@ export const SWAGGER_PATHS = {
     '/auth/resend-verification-email': resendVerificationEmailDocs,
     '/auth/send-password-reset-otp': passwordResetRequestEmailDocs,
     '/auth/set-new-password': passwordResetDocs,
-
+    '/auth/login': loginDocs,
+    '/auth/refresh': refreshTokenDocs,
+    '/auth/logout': logoutDocs,
 }

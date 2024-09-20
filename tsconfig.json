@@ -10,9 +10,10 @@
     "strict": true,
     "useDefineForClassFields": false, // Important for older versions
     "noImplicitAny": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "typeRoots": ["./types", "./node_modules/@types"]
     
   },
-  "include": ["*.ts"],        // Include all TypeScript files in the root directory
+  "include": ["./**/*.ts"],
   "exclude": ["node_modules"]
 }
