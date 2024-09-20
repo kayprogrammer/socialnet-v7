@@ -13,3 +13,13 @@ export class EmailSchema {
     @IsEmail({}, {message: "Enter a valid email address"})
     email?: string
 }
+
+export class UnprocessableSchema {
+    @Expose()
+    @Example("This field is required")
+    field1?: string
+
+    @Expose()
+    @Example("Ensure this is a valid type")
+    field2?: string
+}

@@ -37,3 +37,10 @@ export class VerifyEmailSchema extends EmailSchema {
     @IsNumber()
     otp?: number;
 }
+
+export class SetNewPasswordSchema extends VerifyEmailSchema {
+    @Example("newstrongpassword")
+    @Expose()
+    @Length(8, 50)
+    password?: string;
+}

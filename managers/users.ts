@@ -40,10 +40,19 @@ import ENV from '../config/config';
 //   return usersInCity;
 // };
 
+const hashPassword = async (password: string) => {
+    const hashedPassword: string = await bcrypt.hash(password, 10) 
+    return hashedPassword
+}
+
+const checkPassword = async (user: IUser, password: string) => {
+    return await bcrypt.compare(password, user.password)
+}
+
 const createUser = async (userData: Record<string,any>, isStaff: boolean = false) => {
     const { password, ...otherUserData } = userData;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
     const otpExpiry = new Date(new Date().getTime() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000);
     const newUser = new User({ password: hashedPassword, isStaff, otpExpiry, ...otherUserData });
     await newUser.save();
@@ -66,4 +75,4 @@ const createOtp = async (user: IUser): Promise<number> => {
     return otp
 };
 
-export { createUser, createOtp };
+export { createUser, createOtp, hashPassword, checkPassword };

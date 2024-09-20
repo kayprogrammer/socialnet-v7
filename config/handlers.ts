@@ -64,6 +64,12 @@ export class NotFoundError extends RequestError {
     }
 }
 
+export class ServerErr extends RequestError {
+    constructor(message: string = "Server Error") {
+        super(message, 500, ErrorCode.SERVER_ERROR);
+    }
+}
+
 
 /**
  * Centralized error handling middleware

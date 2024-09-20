@@ -4,6 +4,7 @@ import fs from 'fs';
 import ENV from '../config/config'
 import { IUser } from '../models/accounts';
 import { createOtp } from "../managers/users"
+import { RequestError, ServerErr } from './handlers';
 
 const transporter: Transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -81,6 +82,6 @@ export const sendEmail = async (type: string, user: any): Promise<void> => {
         })
     } catch (error) {
         console.error('Error sending email:', error);
-        throw error;
+        throw new ServerErr();
     }
 };

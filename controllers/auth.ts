@@ -2,10 +2,11 @@ import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../config/utils";
 import { User } from "../models/accounts";
 import { ErrorCode, NotFoundError, RequestError, ValidationErr, validationMiddleware } from "../config/handlers";
-import { createOtp, createUser } from "../managers/users";
+import { createUser, hashPassword } from "../managers/users";
 import { EmailSchema } from "../schemas/base";
-import { RegisterSchema, VerifyEmailSchema } from "../schemas/auth";
+import { RegisterSchema, SetNewPasswordSchema, VerifyEmailSchema } from "../schemas/auth";
 import { sendEmail } from "../config/emailer"
+import bcrypt from 'bcryptjs';
 
 const authRouter = Router();
 
@@ -110,5 +111,56 @@ authRouter.post('/resend-verification-email', validationMiddleware(EmailSchema),
     }
 });
 
+/**
+ * @route POST /send-password-reset-otp
+ * @description This endpoint sends new password reset otp to the user's email.
+ * We can use the verification email resend to do this actually, but I just wanted
+ * to seperate it incase you have some special stuffs you might want to include here 
+ */
+authRouter.post('/send-password-reset-otp', validationMiddleware(EmailSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userData: EmailSchema = req.body;
+
+        const { email } = userData;
+        const user = await User.findOne({ email })
+        if (!user) throw new NotFoundError("Incorrect email!")
+
+        // Send otp email
+        await sendEmail("reset", user);
+        return res.status(200).json(CustomResponse.success('Email sent successful'))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /set-new-password
+ * @description Verifies the password reset otp and updates the user's password.
+ * @returns {Response} - JSON response with success message.
+ */
+authRouter.post('/set-new-password', validationMiddleware(SetNewPasswordSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userData: SetNewPasswordSchema = req.body;
+
+        const { email, otp, password } = userData;
+        const user = await User.findOne({ email })
+        if (!user) throw new NotFoundError("Incorrect email!")
+
+        // Verify otp
+        let currentDate = new Date() 
+        if (user.otp !== otp || currentDate > user.otpExpiry) throw new RequestError("Otp is invalid or expired", 400, ErrorCode.INVALID_OTP)
+        
+        // Update user
+        await User.updateOne(
+            { _id: user._id },
+            { $set: { otp: null, otpExpiry: null, password: await hashPassword(password as string) } }
+        );
+        // Send welcome email
+        await sendEmail("reset-success", user);
+        return res.status(200).json(CustomResponse.success('Password reset successful'))
+    } catch (error) {
+        next(error)
+    }
+});
 
 export default authRouter;

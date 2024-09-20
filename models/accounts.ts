@@ -66,6 +66,7 @@ interface IUser extends IBase {
   lastName: string;
   username: string;
   email: string;
+  password: string;
   avatar?: Types.ObjectId;
   termsAgreement: boolean;
   isEmailVerified: boolean;
@@ -85,6 +86,7 @@ const UserSchema = new Schema<IUser>({
   lastName: { type: String, required: true, maxlength: 50 },
   username: { type: String, unique: true, blank: true }, // For slug, you can generate it before saving
   email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   avatar: { type: Schema.Types.ObjectId, ref: 'File', null: true, blank: true },
   termsAgreement: { type: Boolean, default: false },
   isEmailVerified: { type: Boolean, default: false },
