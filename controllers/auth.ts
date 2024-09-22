@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../config/utils";
-import { IUser, User } from "../models/accounts";
+import {  User } from "../models/accounts";
 import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config/handlers";
 import { validationMiddleware } from "../middlewares/error"
 import { checkPassword, createAccessToken, createRefreshToken, createUser, hashPassword, verifyRefreshToken } from "../managers/users";

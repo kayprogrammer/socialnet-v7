@@ -14,6 +14,20 @@ export class EmailSchema {
     email?: string
 }
 
+export class UserSchema {
+    @Expose()
+    @Example("John Doe")
+    name?: string
+
+    @Expose()
+    @Example("john-doe")
+    username?: string
+
+    @Expose()
+    @Example("https://img.com/john")
+    avatar?: string
+}
+
 export class UnprocessableSchema {
     @Expose()
     @Example("This field is required")
@@ -23,3 +37,9 @@ export class UnprocessableSchema {
     @Example("Ensure this is a valid type")
     field2?: string
 }
+
+const UUID_EXAMPLE = "196b0b7d-112e-4f4a-8ee9-ab00f0dbdb2b"
+const IMAGE_EXAMPLE = "https://image.com/whatever"
+const DATETIME_EXAMPLE = "2024-09-22T14:30:00Z"
+
+export { UUID_EXAMPLE, IMAGE_EXAMPLE, DATETIME_EXAMPLE }
