@@ -34,7 +34,7 @@ function generateSwaggerRequestExample<T extends object>(summary: string, schema
   }
 }
 
-function generateSwaggerExampleValue<T extends object>(summary: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string): Record<string, any> {
+function generateSwaggerExampleValue<T extends object>(summary: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string | null): Record<string, any> {
   let responseValue = {
     status: status,
     message: message,
@@ -47,18 +47,19 @@ function generateSwaggerExampleValue<T extends object>(summary: string, status: 
   }
 }
 
-function generateSwaggerResponseExample<T extends object>(description: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string): Record<string, any> {
-  
+function generateSwaggerResponseExample<T extends object>(description: string, status: string, message: string, schemaClass?: (new () => T) | null, code?: string | null, isArray: boolean = false): Record<string, any> {
+  let exampleValue = generateSwaggerExampleValue("An example response", status, message, schemaClass, code)
+  if (isArray) exampleValue = [exampleValue]
   return {
     description: description,
     content: {
       'application/json': {
           examples: {
-              example1: generateSwaggerExampleValue("An example response", status, message, schemaClass, code),
+              example1: exampleValue,
           },
       },
     },
   }
 }
 
-export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue }
+export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue, generateSwaggerExampleFromSchema }

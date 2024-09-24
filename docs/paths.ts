@@ -1,4 +1,5 @@
 import { loginDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
+import { postsDocs } from "./feed"
 import { siteDetailDocs } from "./general"
 
 export const SWAGGER_PATHS = {
@@ -11,4 +12,6 @@ export const SWAGGER_PATHS = {
     '/auth/login': loginDocs,
     '/auth/refresh': refreshTokenDocs,
     '/auth/logout': logoutDocs,
+
+    "/feed/posts": postsDocs,
 }

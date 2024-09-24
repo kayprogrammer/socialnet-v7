@@ -1,6 +1,9 @@
 import { Expose } from "class-transformer";
 import { Example } from "./utils";
 import { IsEmail } from "class-validator";
+import { IUser } from "../models/accounts";
+import FileProcessor from "../config/file_processors";
+import { File } from "../models/base";
 
 export class ResponseSchema {
     status: "success" | "failure" = "success";
@@ -25,7 +28,21 @@ export class UserSchema {
 
     @Expose()
     @Example("https://img.com/john")
-    avatar?: string
+    avatarUrl?: string
+}
+
+export class FileUploadDataSchema {
+    @Expose()
+    @Example("5f47ac29e7d1b644a81e1e1a")
+    publicId?: string
+
+    @Expose()
+    @Example("mE4BQwZ9q6R7aDgI56m8Nx5Vx4U")
+    signature?: string
+
+    @Expose()
+    @Example("1638307200")
+    timestamp?: string
 }
 
 export class UnprocessableSchema {
@@ -38,8 +55,25 @@ export class UnprocessableSchema {
     field2?: string
 }
 
+export class PaginatedResponseSchema {
+    @Expose()
+    @Example(1)
+    page?: number
+
+    @Expose()
+    @Example(100)
+    itemsCount?: number
+
+    @Expose()
+    @Example(2)
+    totalPages?: number
+
+    @Expose()
+    @Example(50)
+    itemsPerPage?: number
+}
+
 const UUID_EXAMPLE = "196b0b7d-112e-4f4a-8ee9-ab00f0dbdb2b"
 const IMAGE_EXAMPLE = "https://image.com/whatever"
 const DATETIME_EXAMPLE = "2024-09-22T14:30:00Z"
-
 export { UUID_EXAMPLE, IMAGE_EXAMPLE, DATETIME_EXAMPLE }

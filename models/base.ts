@@ -37,4 +37,4 @@ FileSchema.methods.toString = function () {
 // Create the File model
 const File = model<IFile>('File', FileSchema);
 
-export { IBase, BaseSchema, File };
+export { IBase, BaseSchema, File, IFile };

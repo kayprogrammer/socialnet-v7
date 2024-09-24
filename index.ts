@@ -6,6 +6,7 @@ import generalRouter from './controllers/general';
 import authRouter from './controllers/auth';
 import { handleError } from './middlewares/error';
 import { SWAGGER_PATHS } from './docs/paths';
+import feedRouter from './controllers/feed';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -40,6 +41,7 @@ connectDB()
 // Register Routes
 app.use("/api/v7/general", generalRouter)
 app.use("/api/v7/auth", authRouter)
+app.use("/api/v7/feed", feedRouter)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

@@ -1,9 +1,16 @@
 import { Expose } from "class-transformer";
 import { Example } from "./utils";
-import { DATETIME_EXAMPLE, IMAGE_EXAMPLE, UserSchema, UUID_EXAMPLE } from "./base";
+import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema, UUID_EXAMPLE } from "./base";
+import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
+import FileProcessor, { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
+import { IFile } from "../models/base";
+import { generateSwaggerExampleFromSchema } from "../docs/utils";
+import { Types } from "mongoose";
+import { IComment } from "../models/feed";
 
 export class PostSchema {
     @Expose()
+    @Example(generateSwaggerExampleFromSchema(UserSchema))
     author?: UserSchema;
     
     @Example('Jesus is Lord')
@@ -16,7 +23,7 @@ export class PostSchema {
 
     @Example(IMAGE_EXAMPLE)
     @Expose()
-    image?: string;
+    imageUrl?: string;
 
     @Example(10)
     @Expose()
@@ -34,3 +41,29 @@ export class PostSchema {
     @Expose()
     updatedAt?: string;
 }
+
+export class PostCreateSchema {
+    @Example("Jesus is Lord")
+    @Expose()
+    @IsNotEmpty()
+    text?: string
+
+    @Example("image/png")
+    @Expose()
+    @IsOptional()
+    @IsEnum(ALLOWED_IMAGE_TYPES)
+    fileType?: string
+}
+
+export class PostsResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Example([generateSwaggerExampleFromSchema(PostSchema)])
+    posts?: PostSchema[]
+}
+
+export class PostCreateResponseSchema extends PostSchema {
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(FileUploadDataSchema))
+    fileUploadData?: FileUploadDataSchema;
+}
+

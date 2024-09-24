@@ -1,6 +1,7 @@
 import mongoose, { Schema, model, Types } from 'mongoose';
-import { IBase, BaseSchema } from './base';
-import { randomStringGenerator } from './utils';
+import { IBase, BaseSchema, IFile, File } from './base';
+import { getFileUrl, randomStringGenerator } from './utils';
+import FileProcessor from '../config/file_processors';
 
 // Define the Token interface
 interface IToken {
@@ -64,10 +65,12 @@ const City = model<ICity>('City', CitySchema);
 interface IUser extends IBase {
   firstName: string;
   lastName: string;
+  name: string; // full name
   username: string;
   email: string;
   password: string;
-  avatar?: Types.ObjectId;
+  avatar?: Types.ObjectId | IFile;
+  avatarUrl: string | null;
   termsAgreement: boolean;
   isEmailVerified: boolean;
   isStaff: boolean;
@@ -84,7 +87,7 @@ interface IUser extends IBase {
 const UserSchema = new Schema<IUser>({
   firstName: { type: String, required: true, maxlength: 50 },
   lastName: { type: String, required: true, maxlength: 50 },
-  username: { type: String, unique: true, blank: true }, // For slug, you can generate it before saving
+  username: { type: String, unique: true, blank: true }, // For username, you can generate it before saving
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   avatar: { type: Schema.Types.ObjectId, ref: 'File', null: true, blank: true },
@@ -103,6 +106,14 @@ const UserSchema = new Schema<IUser>({
   ], // Using a separate schema to handle this would have probably been better (to handle multiple logins and easier management maybe). While this method can, its advisable that you don't have a long list of active tokens though. So I have intention of setting a limit. (30 login devices).
   otp: { type: Number, null: true, blank: true },
   otpExpiry: { type: Date, null: true, blank: true },
+});
+
+UserSchema.virtual('name').get(function(this: IUser) {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+UserSchema.virtual('avatarUrl').get(function(this: IUser) {
+  return getFileUrl(this.avatar, "avatars")
 });
 
 // Merge BaseSchema
