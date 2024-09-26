@@ -2,7 +2,7 @@ import { Request } from "express";
 import { Document, Model, Schema } from "mongoose";
 
 interface PaginationResponse<T> {
-    items: T[];
+    items?: T[];
     page: number;
     itemsCount: number;
     totalPages: number;

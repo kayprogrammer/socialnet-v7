@@ -62,4 +62,19 @@ function generateSwaggerResponseExample<T extends object>(description: string, s
   }
 }
 
-export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue, generateSwaggerExampleFromSchema }
+function generateParamExample(name: string, description: string, type: string, example: any, location: "query" | "path" = "query"){
+  let required = false
+  if (location === "path") required = true
+  return {
+    name,
+    in: location,
+    required,
+    description,
+    schema: {
+      type,
+      example
+    }
+  }
+}
+
+export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue, generateSwaggerExampleFromSchema, generateParamExample }

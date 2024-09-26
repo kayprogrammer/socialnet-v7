@@ -1,4 +1,4 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
 import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema, UUID_EXAMPLE } from "./base";
 import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
@@ -57,6 +57,7 @@ export class PostCreateSchema {
 
 export class PostsResponseSchema extends PaginatedResponseSchema {
     @Expose()
+    @Type(() => PostSchema)
     @Example([generateSwaggerExampleFromSchema(PostSchema)])
     posts?: PostSchema[]
 }

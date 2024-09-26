@@ -2,11 +2,12 @@ import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../config/utils";
 import { Post } from "../models/feed";
 import paginate from "../config/paginator";
-import { PostCreateResponseSchema, PostCreateSchema, PostsResponseSchema } from "../schemas/feed";
+import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema } from "../schemas/feed";
 import { validationMiddleware } from "../middlewares/error";
 import { authMiddleware } from "../middlewares/auth";
 import { File } from "../models/base";
 import FileProcessor from "../config/file_processors";
+import { NotFoundError } from "../config/handlers";
 
 const feedRouter = Router();
 
@@ -16,9 +17,9 @@ const feedRouter = Router();
  */
 feedRouter.get('/posts', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let data = await paginate(req, Post, {}, {path: 'author', populate: {path: 'avatar'}})
-        console.log(data)
+        let data = await paginate(req, Post, {}, [{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image"])
         let postsData = { posts: data.items, ...data }
+        delete postsData.items
         return res.status(200).json(
             CustomResponse.success(
                 'Posts fetched', 
@@ -50,6 +51,26 @@ feedRouter.post('/posts', authMiddleware, validationMiddleware(PostCreateSchema)
                 'Post created', 
                 post, 
                 PostCreateResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /posts/:slug
+ * @description Get Post Detail.
+ */
+feedRouter.get('/posts/:slug', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let post = await Post.findOne({ slug: req.params.slug }).populate([{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image"])
+        if (!post) throw new NotFoundError("Post does not exist")
+        return res.status(200).json(
+            CustomResponse.success(
+                'Post details fetched', 
+                post, 
+                PostSchema
             )    
         )
     } catch (error) {
