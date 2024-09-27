@@ -1,7 +1,6 @@
 import mongoose, { Schema, model, Types } from 'mongoose';
-import { IBase, BaseSchema, IFile, File } from './base';
+import { IBase, IFile } from './base';
 import { getFileUrl, randomStringGenerator } from './utils';
-import FileProcessor from '../config/file_processors';
 
 // Define the Token interface
 interface IToken {
@@ -18,10 +17,7 @@ interface ICountry extends IBase {
 const CountrySchema = new Schema<ICountry>({
   name: { type: String, required: true },
   code: { type: String, required: true },
-})
-
-// Merge BaseSchema
-CountrySchema.add(BaseSchema.obj);
+}, { timestamps: true })
 
 // Create the Country model
 const Country = model<ICountry>('Country', CountrySchema);
@@ -36,10 +32,7 @@ interface IState extends IBase {
 const StateSchema = new Schema<IState>({
   name: { type: String, required: true },
   country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country', required: true },
-})
-
-// Merge BaseSchema
-StateSchema.add(BaseSchema.obj);
+}, { timestamps: true })
 
 // Create the State model
 const State = model<IState>('State', StateSchema);
@@ -53,10 +46,7 @@ interface ICity extends IBase {
 const CitySchema = new Schema<ICity>({
   name: { type: String, required: true, maxlength: 50 },
   state: { type: mongoose.Schema.Types.ObjectId, ref: 'State', required: true },
-})
-
-// Merge BaseSchema
-CitySchema.add(BaseSchema.obj);
+}, { timestamps: true })
 
 // Create the City model
 const City = model<ICity>('City', CitySchema);
@@ -106,7 +96,7 @@ const UserSchema = new Schema<IUser>({
   ], // Using a separate schema to handle this would have probably been better (to handle multiple logins and easier management maybe). While this method can, its advisable that you don't have a long list of active tokens though. So I have intention of setting a limit. (30 login devices).
   otp: { type: Number, null: true, blank: true },
   otpExpiry: { type: Date, null: true, blank: true },
-});
+}, { timestamps: true });
 
 UserSchema.virtual('name').get(function(this: IUser) {
   return `${this.firstName} ${this.lastName}`;
@@ -115,9 +105,6 @@ UserSchema.virtual('name').get(function(this: IUser) {
 UserSchema.virtual('avatarUrl').get(function(this: IUser) {
   return getFileUrl(this.avatar, "avatars")
 });
-
-// Merge BaseSchema
-UserSchema.add(BaseSchema.obj);
 
 // Pre-save hook to generate a unique username
 UserSchema.pre<IUser>('save', async function (next) {

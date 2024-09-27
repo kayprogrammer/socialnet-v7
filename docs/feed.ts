@@ -34,18 +34,48 @@ const postsDocs = {
 };
 
 const SLUG_EXAMPLE = "john-doe-507f1f77bcf86cd799439011"
+const SLUG_PARAM = generateParamExample("slug", "Slug of the post to fetch", "string", SLUG_EXAMPLE, "path")
+const POST_NOT_FOUND_RESPONSE = generateSwaggerResponseExample("Post Not Found response", FAILURE_STATUS, "Post Does not exist", null, ErrorCode.NON_EXISTENT)
 
 const postDetailDocs = {
     get: {
         tags: tags,
         summary: 'Get post details',
         description: "Fetch details of a single post.",
-        parameters: [
-            generateParamExample("slug", "Slug of the post to fetch", "string", SLUG_EXAMPLE, "path"),
-        ],
+        parameters: [SLUG_PARAM],
         responses: {
-            200: generateSwaggerResponseExample('Post detail fetched successful response', SUCCESS_STATUS, "Post details fetched", PostsResponseSchema),
-            404: generateSwaggerResponseExample("Post Not Found response", FAILURE_STATUS, "Post Does not exist", null, ErrorCode.NON_EXISTENT),
+            200: generateSwaggerResponseExample('Post detail fetched successful response', SUCCESS_STATUS, "Post details fetched", PostSchema),
+            404: POST_NOT_FOUND_RESPONSE,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    put: {
+        tags: tags,
+        summary: 'Update a post',
+        description: "Allows authenticated users to update a post",
+        security: [{ BearerAuth: [] }],
+        parameters: [SLUG_PARAM],
+        requestBody: generateSwaggerRequestExample("Post", PostCreateSchema),
+        responses: {
+            200: generateSwaggerResponseExample('Posts updated response', SUCCESS_STATUS, "Post updated", PostCreateResponseSchema),
+            422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: POST_NOT_FOUND_RESPONSE,
+            400: generateSwaggerResponseExample("Post Not Yours response", FAILURE_STATUS, "Post is not yours to edit", null, ErrorCode.INVALID_OWNER),
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    delete: {
+        tags: tags,
+        summary: 'Delete post',
+        description: "Allow auth users to delete a single post.",
+        parameters: [SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Post deleted successful response', SUCCESS_STATUS, "Post deleted"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: POST_NOT_FOUND_RESPONSE,
+            400: generateSwaggerResponseExample("Post Not Yours response", FAILURE_STATUS, "Post is not yours to delete", null, ErrorCode.INVALID_OWNER),
             500: ERROR_EXAMPLE_500
         }
     },

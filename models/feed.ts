@@ -1,5 +1,5 @@
-import mongoose, { Schema, model, Types } from 'mongoose';
-import { IBase, BaseSchema, IFile } from './base';
+import { Schema, model, Types } from 'mongoose';
+import { IBase, IFile } from './base';
 import { IUser, User } from './accounts';
 import { getFileUrl } from './utils';
 
@@ -30,10 +30,7 @@ const PostSchema = new Schema<IPost>({
         rType: { type: String, enum: REACTION_CHOICES, required: true },
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
-});
-
-// Merge BaseSchema
-PostSchema.add(BaseSchema.obj);
+}, { timestamps: true });
 
 // Pre-save hook to generate a slug
 PostSchema.pre<IPost>('save', async function (next) {
@@ -54,8 +51,11 @@ PostSchema.virtual('reactionsCount').get(function(this: IPost) {
     return this.reactions.length
 });
 
-PostSchema.virtual('commentsCount').get(function(this: IPost) {
-    return 0
+PostSchema.virtual('commentsCount', {
+    ref: 'Comment', // Reference to the Comment model
+    localField: '_id', 
+    foreignField: 'post',
+    count: true,
 });
 
 
@@ -83,10 +83,7 @@ const CommentSchema = new Schema<IComment>({
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
     replies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }], // Self-referencing
-});
-
-// Merge BaseSchema
-CommentSchema.add(BaseSchema.obj);
+}, { timestamps: true });
 
 // Pre-save hook to generate a slug
 CommentSchema.pre<IComment>('save', async function (next) {

@@ -58,8 +58,7 @@ const createUser = async (userData: Record<string,any>, isStaff: boolean = false
 
     const hashedPassword = await hashPassword(password);
     const otpExpiry = new Date(new Date().getTime() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000);
-    const newUser = new User({ password: hashedPassword, isStaff, otpExpiry, ...otherUserData });
-    await newUser.save();
+    const newUser = await User.create({ password: hashedPassword, isStaff, otpExpiry, ...otherUserData });
     return newUser; 
 };
 

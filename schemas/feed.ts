@@ -2,11 +2,8 @@ import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
 import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema, UUID_EXAMPLE } from "./base";
 import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
-import FileProcessor, { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
-import { IFile } from "../models/base";
+import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
-import { Types } from "mongoose";
-import { IComment } from "../models/feed";
 
 export class PostSchema {
     @Expose()
@@ -35,11 +32,11 @@ export class PostSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
-    createdAt?: string;
+    createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
-    updatedAt?: string;
+    updatedAt?: Date;
 }
 
 export class PostCreateSchema {

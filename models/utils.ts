@@ -1,5 +1,5 @@
-import crypto from 'crypto'; // Import crypto for generating random strings
-import { File, IFile } from './base';
+import crypto from 'crypto';
+import { IFile } from './base';
 import { Types } from 'mongoose';
 import FileProcessor from '../config/file_processors';
 

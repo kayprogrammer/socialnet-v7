@@ -55,3 +55,10 @@ export const randomStr = (length: number): string => {
 
   return randomString;
 }
+
+export const setDictAttr = (from: Record<string,any>, to: Record<string,any>): Record<string,any> => {
+  for (var key in from){
+    to[key] = from[key]
+  }
+  return to
+}

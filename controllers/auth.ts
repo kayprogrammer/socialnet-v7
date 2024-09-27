@@ -28,7 +28,6 @@ authRouter.post('/register', validationMiddleware(RegisterSchema), async (req: R
         const existingUser = await User.findOne({ email })
         if (existingUser) throw new ValidationErr("email", "Email already registered")
         const user = await createUser(req.body)
-    
         // Send verification email
         await sendEmail("activate", user);
         return res.status(201).json(
