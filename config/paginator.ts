@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { Document, Model, Schema } from "mongoose";
+import { Document, Model } from "mongoose";
 
 interface PaginationResponse<T> {
     items?: T[];
@@ -9,7 +9,8 @@ interface PaginationResponse<T> {
     itemsPerPage: number;
 }
 
-const paginate = async <T extends Document>(req: Request, modelClass: Model<T>, filter: Record<string,any> = {}, populateData: any): Promise<PaginationResponse<T>> =>  {
+const paginateModel = async <T extends Document>(req: Request, modelClass: Model<T>, filter: Record<string,any> = {}, populateData: any): Promise<PaginationResponse<T>> =>  {
+    // paginate data from the model
     const page = parseInt(req.query.page as string) || 1; // Default to page 1
     const limit = parseInt(req.query.limit as string) || 100; // Default to 100 items per page
 
@@ -24,4 +25,20 @@ const paginate = async <T extends Document>(req: Request, modelClass: Model<T>, 
     return { items, page, itemsCount, totalPages, itemsPerPage: limit }
 }
 
-export default paginate
+const paginateRecords = async <T extends Document>(req: Request, records: any[]): Promise<PaginationResponse<T>> =>  {
+    // Paginate records
+    const page = parseInt(req.query.page as string) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit as string) || 100; // Default to 100 items per page
+
+    const skip = (page - 1) * limit;
+
+    // Get total count of items
+    const itemsCount = records.length;
+
+    // Get paginated items
+    const paginatedItems = records.slice(skip, skip + limit);
+    const totalPages = Math.ceil(itemsCount / limit)
+    return { items: paginatedItems, page, itemsCount, totalPages, itemsPerPage: limit }
+}
+
+export { paginateModel, paginateRecords }

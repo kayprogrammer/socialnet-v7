@@ -1,13 +1,14 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse } from "../config/utils";
 import { Post } from "../models/feed";
-import paginate from "../config/paginator";
-import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema } from "../schemas/feed";
+import { paginateModel, paginateRecords } from "../config/paginator";
+import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema, ReactionCreateSchema, ReactionSchema, ReactionsResponseSchema } from "../schemas/feed";
 import { validationMiddleware } from "../middlewares/error";
 import { authMiddleware } from "../middlewares/auth";
 import { File } from "../models/base";
 import FileProcessor from "../config/file_processors";
 import { ErrorCode, NotFoundError, RequestError } from "../config/handlers";
+import { addOrUpdateReaction, getPostOrComment } from "../managers/feed";
 
 const feedRouter = Router();
 
@@ -17,7 +18,7 @@ const feedRouter = Router();
  */
 feedRouter.get('/posts', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let data = await paginate(req, Post, {}, [{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image", "commentsCount"])
+        let data = await paginateModel(req, Post, {}, [{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image", "commentsCount"])
         let postsData = { posts: data.items, ...data }
         delete postsData.items
         return res.status(200).json(
@@ -120,6 +121,56 @@ feedRouter.delete('/posts/:slug', authMiddleware, async (req: Request, res: Resp
         if (post.author.toString() !== user.id) throw new RequestError("Post is not yours to delete", 400, ErrorCode.INVALID_OWNER)
         await post.deleteOne()
         return res.status(200).json(CustomResponse.success('Post deleted'))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /reactions/:slug
+ * @description Get Reactions of a Post, Comment or Reply.
+ */
+feedRouter.get('/reactions/:slug', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const reactionType = req.query.reactionType || null
+        const postOrComment = await getPostOrComment(req.params.slug)
+        if (!postOrComment) throw new NotFoundError("No Post, Comment or Reply with that slug")
+        let reactions = postOrComment.reactions
+        if (reactionType) reactions = reactions.filter(item => item["rType"] === reactionType)
+        let data = await paginateRecords(req, reactions)
+        let reactionsData = { reactions: data.items, ...data }
+        delete reactionsData.items
+        return res.status(200).json(
+            CustomResponse.success(
+                'Reactions fetched', 
+                reactionsData, 
+                ReactionsResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /reactions/:slug
+ * @description Create a Reaction.
+ */
+feedRouter.post('/reactions/:slug', authMiddleware, validationMiddleware(ReactionCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        const { rType } = req.body;
+        let postOrComment = await getPostOrComment(req.params.slug)
+        if (!postOrComment) throw new NotFoundError("No Post, Comment or Reply with that slug")
+        let reactionData = await addOrUpdateReaction(postOrComment, user.id, rType)
+        let dataToReturn = { user, rType: reactionData.rType }
+        return res.status(201).json(
+            CustomResponse.success(
+                'Reaction created', 
+                dataToReturn, 
+                ReactionSchema
+            )    
+        )
     } catch (error) {
         next(error)
     }

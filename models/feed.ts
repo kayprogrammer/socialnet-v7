@@ -18,7 +18,14 @@ interface IPost extends IBase {
     fileUploadData?: { publicId: string, signature: string, timestamp: string } | null;
 }
 
-const REACTION_CHOICES = ['LIKE', 'LOVE', 'HAHA', 'WOW', 'SAD', "ANGRY"];
+enum REACTION_CHOICES_ENUM {
+    LIKE = "LIKE",
+    LOVE = "LOVE",
+    HAHA = "HAHA",
+    WOW = "WOW",
+    SAD = "SAD",
+    ANGRY = "ANGRY"
+}
 
 // Create the Post schema
 const PostSchema = new Schema<IPost>({
@@ -27,7 +34,7 @@ const PostSchema = new Schema<IPost>({
     slug: { type: String, unique: true, blank: true }, // For slug, you can generate it before saving
     image: { type: Schema.Types.ObjectId, ref: 'File', default: null },
     reactions: [{ 
-        rType: { type: String, enum: REACTION_CHOICES, required: true },
+        rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
 }, { timestamps: true });
@@ -79,7 +86,7 @@ const CommentSchema = new Schema<IComment>({
     text: { type: String, required: true },
     slug: { type: String, required: true, maxlength: 1000, unique: true, index: true }, // Added indexing
     reactions: [{ 
-        rType: { type: String, enum: REACTION_CHOICES, required: true },
+        rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
     replies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }], // Self-referencing
@@ -99,4 +106,4 @@ CommentSchema.pre<IComment>('save', async function (next) {
 // Create the Comment model
 const Comment = model<IComment>('Comment', CommentSchema);
 
-export { Post, Comment, IPost, IComment };
+export { Post, Comment, IPost, IComment, REACTION_CHOICES_ENUM };

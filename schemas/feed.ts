@@ -4,6 +4,7 @@ import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedRespons
 import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
+import { REACTION_CHOICES_ENUM } from "../models/feed";
 
 export class PostSchema {
     @Expose()
@@ -65,3 +66,25 @@ export class PostCreateResponseSchema extends PostSchema {
     fileUploadData?: FileUploadDataSchema;
 }
 
+export class ReactionSchema {
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(UserSchema))
+    user?: UserSchema;
+
+    @Expose()
+    @Example(REACTION_CHOICES_ENUM.LIKE)
+    rType?: string
+}
+
+export class ReactionCreateSchema {
+    @Expose()
+    @Example(REACTION_CHOICES_ENUM.LIKE)
+    @IsEnum(REACTION_CHOICES_ENUM)
+    rType?: string
+}
+export class ReactionsResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Type(() => ReactionSchema)
+    @Example([generateSwaggerExampleFromSchema(ReactionSchema)])
+    reactions?: ReactionSchema[]
+}

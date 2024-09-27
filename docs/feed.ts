@@ -1,5 +1,5 @@
 import { ErrorCode } from "../config/handlers";
-import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema } from "../schemas/feed";
+import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema, ReactionCreateSchema, ReactionSchema, ReactionsResponseSchema } from "../schemas/feed";
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
 import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils";
 
@@ -25,7 +25,7 @@ const postsDocs = {
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Post", PostCreateSchema),
         responses: {
-            201: generateSwaggerResponseExample('Posts created response', SUCCESS_STATUS, "Post created", PostCreateResponseSchema),
+            201: generateSwaggerResponseExample('Post created response', SUCCESS_STATUS, "Post created", PostCreateResponseSchema),
             422: ERROR_EXAMPLE_422,
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             500: ERROR_EXAMPLE_500
@@ -57,7 +57,7 @@ const postDetailDocs = {
         parameters: [SLUG_PARAM],
         requestBody: generateSwaggerRequestExample("Post", PostCreateSchema),
         responses: {
-            200: generateSwaggerResponseExample('Posts updated response', SUCCESS_STATUS, "Post updated", PostCreateResponseSchema),
+            200: generateSwaggerResponseExample('Post updated response', SUCCESS_STATUS, "Post updated", PostCreateResponseSchema),
             422: ERROR_EXAMPLE_422,
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             404: POST_NOT_FOUND_RESPONSE,
@@ -81,4 +81,34 @@ const postDetailDocs = {
     },
 };
 
-export { postsDocs, postDetailDocs }
+const POST_SLUG_FOR_REACTION_PARAM = generateParamExample("slug", "Slug of the post, comment or reply to fetch", "string", SLUG_EXAMPLE, "path")
+const POST_COMMENT_NOT_FOUND_RESP = generateSwaggerResponseExample("Post/Comment/Reply Not Found response", FAILURE_STATUS, "No Post, Comment or Reply with that slug", null, ErrorCode.NON_EXISTENT)
+const reactionsDocs = {
+    get: {
+        tags: tags,
+        summary: 'Get reactions',
+        description: "Fetch Reactions of a Post, Comment or Reply.",
+        parameters: [POST_SLUG_FOR_REACTION_PARAM],
+        responses: {
+            200: generateSwaggerResponseExample('Reactions fetched successful response', SUCCESS_STATUS, "Reactions fetched", ReactionsResponseSchema),
+            404: POST_COMMENT_NOT_FOUND_RESP,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    post: {
+        tags: tags,
+        summary: 'Create a reaction',
+        description: "Allows authenticated users to create a reaction for a post, comment or reply",
+        security: [{ BearerAuth: [] }],
+        parameters: [POST_SLUG_FOR_REACTION_PARAM],
+        requestBody: generateSwaggerRequestExample("Reaction", ReactionCreateSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Reaction created response', SUCCESS_STATUS, "Reaction created", ReactionSchema),
+            422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: POST_COMMENT_NOT_FOUND_RESP,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+}
+export { postsDocs, postDetailDocs, reactionsDocs }
