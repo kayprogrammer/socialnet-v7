@@ -8,7 +8,7 @@ import { authMiddleware } from "../middlewares/auth";
 import { File } from "../models/base";
 import FileProcessor from "../config/file_processors";
 import { ErrorCode, NotFoundError, RequestError } from "../config/handlers";
-import { addOrUpdateReaction, getPostOrComment } from "../managers/feed";
+import { addOrUpdateReaction, getPostOrComment, removeReaction } from "../managers/feed";
 
 const feedRouter = Router();
 
@@ -171,6 +171,22 @@ feedRouter.post('/reactions/:slug', authMiddleware, validationMiddleware(Reactio
                 ReactionSchema
             )    
         )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route DELETE /reactions/:slug
+ * @description Delete a Reaction.
+ */
+feedRouter.delete('/reactions/:slug', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        let postOrComment = await getPostOrComment(req.params.slug)
+        if (!postOrComment) throw new NotFoundError("No Post, Comment or Reply with that slug")
+        await removeReaction(postOrComment, user.id)
+        return res.status(200).json(CustomResponse.success('Reaction deleted'))
     } catch (error) {
         next(error)
     }

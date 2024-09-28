@@ -8,7 +8,7 @@ const postsDocs = {
     get: {
         tags: tags,
         summary: 'Fetch latest posts',
-        description: "Fetch all the latest posts",
+        description: `Fetch all the latest posts`,
         parameters: [
             generateParamExample("page", "Current page of posts to fetch", "integer", 1),
             generateParamExample("limit", "Number of posts per page to fetch", "integer", 100),
@@ -21,7 +21,7 @@ const postsDocs = {
     post: {
         tags: tags,
         summary: 'Create a post',
-        description: "Allows authenticated users to create a post",
+        description: `Allows authenticated users to create a post`,
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Post", PostCreateSchema),
         responses: {
@@ -41,7 +41,7 @@ const postDetailDocs = {
     get: {
         tags: tags,
         summary: 'Get post details',
-        description: "Fetch details of a single post.",
+        description: `Fetch details of a single post.`,
         parameters: [SLUG_PARAM],
         responses: {
             200: generateSwaggerResponseExample('Post detail fetched successful response', SUCCESS_STATUS, "Post details fetched", PostSchema),
@@ -52,7 +52,7 @@ const postDetailDocs = {
     put: {
         tags: tags,
         summary: 'Update a post',
-        description: "Allows authenticated users to update a post",
+        description: `Allows authenticated users to update a post`,
         security: [{ BearerAuth: [] }],
         parameters: [SLUG_PARAM],
         requestBody: generateSwaggerRequestExample("Post", PostCreateSchema),
@@ -68,7 +68,7 @@ const postDetailDocs = {
     delete: {
         tags: tags,
         summary: 'Delete post',
-        description: "Allow auth users to delete a single post.",
+        description: `Allow auth users to delete a single post.`,
         parameters: [SLUG_PARAM],
         security: [{ BearerAuth: [] }],
         responses: {
@@ -87,8 +87,11 @@ const reactionsDocs = {
     get: {
         tags: tags,
         summary: 'Get reactions',
-        description: "Fetch Reactions of a Post, Comment or Reply.",
-        parameters: [POST_SLUG_FOR_REACTION_PARAM],
+        description: `Fetch Reactions of a Post, Comment or Reply.`,
+        parameters: [
+            POST_SLUG_FOR_REACTION_PARAM,
+            generateParamExample("reactionType", "Filter by reaction type", "string", "LIKE"),
+        ],
         responses: {
             200: generateSwaggerResponseExample('Reactions fetched successful response', SUCCESS_STATUS, "Reactions fetched", ReactionsResponseSchema),
             404: POST_COMMENT_NOT_FOUND_RESP,
@@ -98,13 +101,33 @@ const reactionsDocs = {
     post: {
         tags: tags,
         summary: 'Create a reaction',
-        description: "Allows authenticated users to create a reaction for a post, comment or reply",
+        description: `
+            Allows authenticated users to create a reaction for a post, comment or reply
+            rtype should be any of these:
+            
+            - LIKE    - LOVE
+            - HAHA    - WOW
+            - SAD     - ANGRY
+        `,
         security: [{ BearerAuth: [] }],
         parameters: [POST_SLUG_FOR_REACTION_PARAM],
         requestBody: generateSwaggerRequestExample("Reaction", ReactionCreateSchema),
         responses: {
             201: generateSwaggerResponseExample('Reaction created response', SUCCESS_STATUS, "Reaction created", ReactionSchema),
             422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: POST_COMMENT_NOT_FOUND_RESP,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    delete: {
+        tags: tags,
+        summary: 'Remove a reaction',
+        description: `Allows authenticated users to remove a reaction for a post, comment or reply`,
+        security: [{ BearerAuth: [] }],
+        parameters: [POST_SLUG_FOR_REACTION_PARAM],
+        responses: {
+            200: generateSwaggerResponseExample('Reaction deleted response', SUCCESS_STATUS, "Reaction deleted"),
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             404: POST_COMMENT_NOT_FOUND_RESP,
             500: ERROR_EXAMPLE_500

@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { Comment, IComment, IPost, Post } from "../models/feed";
+import { User } from "../models/accounts";
 
 const getPostOrComment = async (slug: string): Promise<IPost | IComment | null> => {
     const post = await Post.findOne({ slug })
@@ -21,4 +22,14 @@ const addOrUpdateReaction = async (postOrComment: IPost | IComment, userId: Type
   return reactionData
 }
 
-export { getPostOrComment, addOrUpdateReaction }
+const removeReaction = async (postOrComment: IPost | IComment, userId: Types.ObjectId): Promise<boolean> => {
+  const index = postOrComment.reactions.findIndex(reaction => reaction.userId.toString() === userId.toString())
+  const isRemovable = index !== -1
+  if (isRemovable) {
+    postOrComment.reactions.splice(index, 1)
+    await postOrComment.save()
+  }
+  return isRemovable // Indicates whether it was removed or not
+}
+
+export { getPostOrComment, addOrUpdateReaction, removeReaction }
