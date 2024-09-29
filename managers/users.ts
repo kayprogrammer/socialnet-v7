@@ -126,4 +126,9 @@ const decodeAuth = async (token: string): Promise<IUser | null> => {
       return null;
     }
 }
-export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth };
+
+const shortUserPopulation = (field: string): any => {
+    return {path: field, select: "firstName lastName username avatar", populate: {path: 'avatar'}}
+}
+
+export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, shortUserPopulation };

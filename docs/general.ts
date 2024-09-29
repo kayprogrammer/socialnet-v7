@@ -4,7 +4,7 @@ import { ERROR_EXAMPLE_500, SUCCESS_STATUS } from "./base";
 
 export const siteDetailDocs = {
     get: {
-        tags: ['General'],
+        tags: ['General (1)'],
         summary: 'Get site details',
         description: "Fetch details about the site like name, email, address, etc.",
         responses: {

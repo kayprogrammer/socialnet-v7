@@ -1,4 +1,4 @@
-import { Schema, model, Types } from 'mongoose';
+import { Schema, model, Types, Model } from 'mongoose';
 import { IBase, IFile } from './base';
 import { IUser, User } from './accounts';
 import { getFileUrl } from './utils';
@@ -35,7 +35,7 @@ const PostSchema = new Schema<IPost>({
     image: { type: Schema.Types.ObjectId, ref: 'File', default: null },
     reactions: [{ 
         rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+        user: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
 }, { timestamps: true });
 
@@ -97,7 +97,7 @@ const CommentSchema = new Schema<IComment>({
     slug: { type: String, unique: true, index: true, blank: true }, // Added indexing
     reactions: [{ 
         rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+        user: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
     parent: { type: Schema.Types.ObjectId, ref: 'Comment', default: null }, // Self-referencing
 }, { timestamps: true });
@@ -110,6 +110,13 @@ CommentSchema.pre<IComment>('save', async function (next) {
             this.slug = `${author.firstName}-${author.lastName}-${this._id}`.toLowerCase().replace(/\s+/g, '-');
         }
     }
+    next();
+});
+
+// Middleware to delete replies when a comment is removed
+CommentSchema.pre<IComment>('deleteOne', { document: true, query: false }, async function(next) {
+    // Remove all replies associated with this comment
+    await (this.model('Comment') as Model<IComment>).deleteMany({ parent: this._id });
     next();
 });
 

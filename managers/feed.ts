@@ -1,11 +1,11 @@
 import { Types } from "mongoose";
 import { Comment, IComment, IPost, Post } from "../models/feed";
-import { User } from "../models/accounts";
+import { shortUserPopulation } from "./users";
 
 const getPostOrComment = async (slug: string): Promise<IPost | IComment | null> => {
-    const post = await Post.findOne({ slug })
+    const post = await Post.findOne({ slug }).populate(shortUserPopulation("reactions.user"))
     let comment = null
-    if (!post) comment = await Comment.findOne({ slug })
+    if (!post) comment = await Comment.findOne({ slug }).populate(shortUserPopulation("reactions.user"))
     return post || comment
 }
 

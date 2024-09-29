@@ -4,7 +4,7 @@ import { EmailSchema } from "../schemas/base";
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
 import { generateSwaggerExampleValue, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
-const tags = ['Auth']
+const tags = ['Auth (8)']
 
 const registerDocs = {
     post: {

@@ -1,12 +1,12 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
-import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema, UUID_EXAMPLE } from "./base";
+import { DATETIME_EXAMPLE, FileUploadDataSchema, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
 import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
 import { REACTION_CHOICES_ENUM } from "../models/feed";
 
-const SLUG_EXAMPLE = `john-doe-${UUID_EXAMPLE}`
+const SLUG_EXAMPLE = `john-doe-507f1f77bcf86cd799439011`
 
 export class PostSchema {
     @Expose()
@@ -71,6 +71,7 @@ export class PostCreateResponseSchema extends PostSchema {
 export class ReactionSchema {
     @Expose()
     @Example(generateSwaggerExampleFromSchema(UserSchema))
+    @Type(() => UserSchema)
     user?: UserSchema;
 
     @Expose()

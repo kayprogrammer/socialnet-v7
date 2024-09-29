@@ -1,5 +1,5 @@
 import { loginDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
-import { commentsDocs, commentsWithRepliesDocs, postDetailDocs, postsDocs, reactionsDocs } from "./feed"
+import { commentsDocs, commentsWithRepliesDocs, postDetailDocs, postsDocs, reactionsDocs, replyDocs } from "./feed"
 import { siteDetailDocs } from "./general"
 
 export const SWAGGER_PATHS = {
@@ -17,5 +17,6 @@ export const SWAGGER_PATHS = {
     "/feed/posts/{slug}": postDetailDocs,
     "/feed/posts/{slug}/comments": commentsDocs,
     "/feed/comments/{slug}": commentsWithRepliesDocs,
+    "/feed/replies/{slug}": replyDocs,
     "/feed/reactions/{slug}": reactionsDocs,
 }

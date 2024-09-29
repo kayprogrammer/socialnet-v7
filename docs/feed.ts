@@ -3,7 +3,7 @@ import { CommentCreateSchema, CommentSchema, CommentsResponseSchema, CommentWith
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
 import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils";
 
-const tags = ["Feed"]
+const tags = ["Feed (17)"]
 const postsDocs = {
     get: {
         tags: tags,
@@ -201,7 +201,84 @@ const commentsWithRepliesDocs = {
             401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             500: ERROR_EXAMPLE_500
         }
+    },
+    put: {
+        tags: tags,
+        summary: 'Update comment',
+        description: `Allows authenticated users to update their comment`,
+        parameters: [COMMENT_SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Comment", CommentCreateSchema),
+        responses: {
+            200: generateSwaggerResponseExample('Comment updated response', SUCCESS_STATUS, "Comment updated", CommentSchema),
+            404: COMMENT_NOT_FOUND_RESPONSE,
+            422: ERROR_EXAMPLE_422,
+            400: generateSwaggerResponseExample("Comment Not Yours response", FAILURE_STATUS, "Comment is not yours to edit", null, ErrorCode.INVALID_OWNER),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    delete: {
+        tags: tags,
+        summary: 'Delete comment',
+        description: `Allows authenticated users to delete their comment`,
+        parameters: [COMMENT_SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Comment deleted response', SUCCESS_STATUS, "Comment deleted"),
+            404: COMMENT_NOT_FOUND_RESPONSE,
+            400: generateSwaggerResponseExample("Comment Not Yours response", FAILURE_STATUS, "Comment is not yours to delete", null, ErrorCode.INVALID_OWNER),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
     }
 }
 
-export { postsDocs, postDetailDocs, reactionsDocs, commentsDocs, commentsWithRepliesDocs }
+const REPLY_SLUG_PARAM = generateParamExample("slug", "Slug of the reply to fetch", "string", SLUG_EXAMPLE, "path")
+const REPLY_NOT_FOUND_RESPONSE = generateSwaggerResponseExample("Reply Not Found response", FAILURE_STATUS, "Reply Does not exist", null, ErrorCode.NON_EXISTENT)
+
+const replyDocs = {
+    get: {
+        tags: tags,
+        summary: 'Get single reply',
+        description: `Get a single reply`,
+        parameters: [REPLY_SLUG_PARAM],
+        responses: {
+            200: generateSwaggerResponseExample('Reply fetched successful response', SUCCESS_STATUS, "Reply fetched", ReplySchema),
+            404: REPLY_NOT_FOUND_RESPONSE,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    put: {
+        tags: tags,
+        summary: 'Update a reply',
+        description: `Allows authenticated users to update a reply`,
+        parameters: [REPLY_SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Reply", CommentCreateSchema),
+        responses: {
+            200: generateSwaggerResponseExample('Reply updated response', SUCCESS_STATUS, "Reply updated", ReplySchema),
+            404: REPLY_NOT_FOUND_RESPONSE,
+            422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            400: generateSwaggerResponseExample("Reply Not Yours response", FAILURE_STATUS, "Reply is not yours to update", null, ErrorCode.INVALID_OWNER),
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    delete: {
+        tags: tags,
+        summary: 'Delete a reply',
+        description: `Allows authenticated users to delete their reply`,
+        parameters: [REPLY_SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Reply deleted response', SUCCESS_STATUS, "Reply deleted"),
+            404: REPLY_NOT_FOUND_RESPONSE,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            400: generateSwaggerResponseExample("Reply Not Yours response", FAILURE_STATUS, "Reply is not yours to delete", null, ErrorCode.INVALID_OWNER),
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { postsDocs, postDetailDocs, reactionsDocs, commentsDocs, commentsWithRepliesDocs, replyDocs }

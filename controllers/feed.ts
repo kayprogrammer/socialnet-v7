@@ -9,6 +9,7 @@ import { File } from "../models/base";
 import FileProcessor from "../config/file_processors";
 import { ErrorCode, NotFoundError, RequestError } from "../config/handlers";
 import { addOrUpdateReaction, getPostOrComment, removeReaction } from "../managers/feed";
+import { shortUserPopulation } from "../managers/users";
 
 const feedRouter = Router();
 
@@ -18,7 +19,7 @@ const feedRouter = Router();
  */
 feedRouter.get('/posts', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let data = await paginateModel(req, Post, {}, [{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image", "commentsCount"])
+        let data = await paginateModel(req, Post, {}, [shortUserPopulation("author"), "image", "commentsCount"])
         let postsData = { posts: data.items, ...data }
         delete postsData.items
         return res.status(200).json(
@@ -65,7 +66,7 @@ feedRouter.post('/posts', authMiddleware, validationMiddleware(PostCreateSchema)
  */
 feedRouter.get('/posts/:slug', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let post = await Post.findOne({ slug: req.params.slug }).populate([{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image"])
+        let post = await Post.findOne({ slug: req.params.slug }).populate([shortUserPopulation("author"), "image"])
         if (!post) throw new NotFoundError("Post does not exist")
         return res.status(200).json(
             CustomResponse.success(
@@ -86,7 +87,7 @@ feedRouter.get('/posts/:slug', async (req: Request, res: Response, next: NextFun
 feedRouter.put('/posts/:slug', authMiddleware, validationMiddleware(PostCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user;
-        let post = await Post.findOne({ slug: req.params.slug }).populate([{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "image"])
+        let post = await Post.findOne({ slug: req.params.slug }).populate([shortUserPopulation("author"), "image"])
         if (!post) throw new NotFoundError("Post does not exist")
         if (post.author.id !== user.id) throw new RequestError("Post is not yours to edit", 400, ErrorCode.INVALID_OWNER)
         const postData: PostCreateSchema = req.body;
@@ -203,7 +204,7 @@ feedRouter.get('/posts/:slug/comments', async (req: Request, res: Response, next
     try {
         let post = await Post.findOne({ slug: req.params.slug })
         if (!post) throw new NotFoundError("Post does not exist")
-        let data = await paginateModel(req, Comment, {post: post.id, parent: null}, [{path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}, "replies"])
+        let data = await paginateModel(req, Comment, {post: post.id, parent: null}, [shortUserPopulation("author"), "replies"])
         let commentsData = { comments: data.items, ...data }
         delete commentsData.items
         return res.status(200).json(
@@ -248,9 +249,8 @@ feedRouter.post('/posts/:slug/comments', authMiddleware, validationMiddleware(Co
  */
 feedRouter.get('/comments/:slug', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const authorPopulation = {path: 'author', select: "firstName lastName username avatar", populate: {path: 'avatar'}}
         let comment = await Comment.findOne({ slug: req.params.slug, parent: null }).populate(
-            [authorPopulation, {path: "replies", populate: authorPopulation}]
+            [shortUserPopulation("author"), {path: "replies", populate: shortUserPopulation("author")}]
         )
         if (!comment) throw new NotFoundError("Comment does not exist")
         let replies = comment.replies
@@ -288,6 +288,110 @@ feedRouter.post('/comments/:slug', authMiddleware, validationMiddleware(CommentC
                 ReplySchema
             )    
         )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route PUT /comments/:slug
+ * @description Update Comment.
+ */
+feedRouter.put('/comments/:slug', authMiddleware, validationMiddleware(CommentCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        let comment = await Comment.findOne({ slug: req.params.slug, parent: null }).populate([shortUserPopulation("author"), "replies"])
+        if (!comment) throw new NotFoundError("Comment does not exist")
+        if (comment.author.id !== user.id) throw new RequestError("Comment is not yours to update", 400, ErrorCode.INVALID_OWNER) 
+        const { text } = req.body;
+        comment.text = text
+        await comment.save()
+        return res.status(200).json(
+            CustomResponse.success(
+                'Comment updated', 
+                comment, 
+                CommentSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route DELETE /comments/:slug
+ * @description Delete Comment.
+ */
+feedRouter.delete('/comments/:slug', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        let comment = await Comment.findOne({ slug: req.params.slug, parent: null })
+        if (!comment) throw new NotFoundError("Comment does not exist")
+        if (comment.author.toString() !== user.id) throw new RequestError("Comment is not yours to delete", 400, ErrorCode.INVALID_OWNER) 
+        await comment.deleteOne()
+        return res.status(200).json(CustomResponse.success('Comment deleted'))
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /replies/:slug
+ * @description Get Reply.
+ */
+feedRouter.get('/replies/:slug', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const reply = await Comment.findOne({ slug: req.params.slug, parent: { $ne: null } }).populate(shortUserPopulation("author"))
+        if (!reply) throw new NotFoundError("Reply does not exist")
+        return res.status(200).json(
+            CustomResponse.success(
+                'Reply fetched', 
+                reply, 
+                ReplySchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route PUT /replies/:slug
+ * @description Update Reply.
+ */
+feedRouter.put('/replies/:slug', authMiddleware, validationMiddleware(CommentCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        const reply = await Comment.findOne({ slug: req.params.slug, parent: { $ne: null } }).populate(shortUserPopulation("author"))
+        if (!reply) throw new NotFoundError("Reply does not exist")
+        if (reply.author.id !== user.id) throw new RequestError("Reply is not yours to update", 400, ErrorCode.INVALID_OWNER) 
+        const { text } = req.body;
+        reply.text = text
+        await reply.save()
+        return res.status(200).json(
+            CustomResponse.success(
+                'Reply updated', 
+                reply, 
+                ReplySchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route DELETE /replies/:slug
+ * @description Delete Reply.
+ */
+feedRouter.delete('/replies/:slug', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        let reply = await Comment.findOne({ slug: req.params.slug, parent: { $ne: null } })
+        if (!reply) throw new NotFoundError("Reply does not exist")
+        if (reply.author.toString() !== user.id) throw new RequestError("Reply is not yours to delete", 400, ErrorCode.INVALID_OWNER) 
+        await reply.deleteOne()
+        return res.status(200).json(CustomResponse.success('Reply deleted'))
     } catch (error) {
         next(error)
     }
