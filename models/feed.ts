@@ -31,7 +31,7 @@ enum REACTION_CHOICES_ENUM {
 const PostSchema = new Schema<IPost>({
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     text: { type: String, required: true },
-    slug: { type: String, unique: true, blank: true }, // For slug, you can generate it before saving
+    slug: { type: String, unique: true, blank: true, index: true },
     image: { type: Schema.Types.ObjectId, ref: 'File', default: null },
     reactions: [{ 
         rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
@@ -62,6 +62,11 @@ PostSchema.virtual('commentsCount', {
     ref: 'Comment', // Reference to the Comment model
     localField: '_id', 
     foreignField: 'post',
+    options: {
+        match: {
+            parent: null,
+        },
+    },
     count: true,
 });
 
@@ -71,36 +76,55 @@ const Post = model<IPost>('Post', PostSchema);
 
 // Define the interface for the Comment model
 interface IComment extends IBase {
-    authorId: Types.ObjectId;
-    postId: Types.ObjectId;
+    author: Types.ObjectId | IUser;
+    post: Types.ObjectId | IPost;
     text: string;
     slug: string;
-    replies: Types.ObjectId[];
+    parent: Types.ObjectId;
+    replies?: IComment[];
     reactions: { rType: string; userId: Types.ObjectId }[]; // Array of reaction objects
+
+    // Not in database
+    reactionsCount: number;
+    repliesCount: number;
 }
 
 // Create the Comment schema
 const CommentSchema = new Schema<IComment>({
-    authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    postId: { type: Schema.Types.ObjectId, ref: 'Post', required: true },
+    author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    post: { type: Schema.Types.ObjectId, ref: 'Post', required: true },
     text: { type: String, required: true },
-    slug: { type: String, required: true, maxlength: 1000, unique: true, index: true }, // Added indexing
+    slug: { type: String, unique: true, index: true, blank: true }, // Added indexing
     reactions: [{ 
         rType: { type: String, enum: REACTION_CHOICES_ENUM, required: true },
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
     }],
-    replies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }], // Self-referencing
+    parent: { type: Schema.Types.ObjectId, ref: 'Comment', default: null }, // Self-referencing
 }, { timestamps: true });
 
 // Pre-save hook to generate a slug
 CommentSchema.pre<IComment>('save', async function (next) {
     if (!this.isModified('slug') || !this.slug) {
-        const author = await User.findById(this.authorId) as IUser;
+        const author = await User.findById(this.author) as IUser;
         if (author) {
             this.slug = `${author.firstName}-${author.lastName}-${this._id}`.toLowerCase().replace(/\s+/g, '-');
         }
     }
     next();
+});
+
+CommentSchema.virtual('reactionsCount').get(function(this: IPost) {
+    return this.reactions.length
+});
+
+CommentSchema.virtual('replies', {
+    ref: 'Comment',
+    localField: '_id',
+    foreignField: 'parent',
+});
+
+CommentSchema.virtual('repliesCount').get(function() {
+    return this.replies ? this.replies.length : 0; 
 });
 
 // Create the Comment model

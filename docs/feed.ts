@@ -1,5 +1,5 @@
 import { ErrorCode } from "../config/handlers";
-import { PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema, ReactionCreateSchema, ReactionSchema, ReactionsResponseSchema } from "../schemas/feed";
+import { CommentCreateSchema, CommentSchema, CommentsResponseSchema, CommentWithRepliesSchema, PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema, ReactionCreateSchema, ReactionSchema, ReactionsResponseSchema, ReplySchema } from "../schemas/feed";
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
 import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils";
 
@@ -134,4 +134,74 @@ const reactionsDocs = {
         }
     },
 }
-export { postsDocs, postDetailDocs, reactionsDocs }
+
+const commentsDocs = {
+    get: {
+        tags: tags,
+        summary: 'Fetch latest comments of a post',
+        description: `Fetches paginated comments of a post`,
+        parameters: [
+            SLUG_PARAM,
+            generateParamExample("page", "Current page of comments to fetch", "integer", 1),
+            generateParamExample("limit", "Number of comments per page to fetch", "integer", 100),
+        ],
+        responses: {
+            200: generateSwaggerResponseExample('Comments fetched successful response', SUCCESS_STATUS, "Comments fetched", CommentsResponseSchema),
+            404: POST_NOT_FOUND_RESPONSE,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    post: {
+        tags: tags,
+        summary: 'Create a comment',
+        description: `Allows authenticated users to create a comment`,
+        parameters: [SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Comment", CommentCreateSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Comment created response', SUCCESS_STATUS, "Comment created", CommentSchema),
+            404: POST_NOT_FOUND_RESPONSE,
+            422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+const COMMENT_SLUG_PARAM = generateParamExample("slug", "Slug of the comment to fetch", "string", SLUG_EXAMPLE, "path")
+const COMMENT_NOT_FOUND_RESPONSE = generateSwaggerResponseExample("Comment Not Found response", FAILURE_STATUS, "Comment Does not exist", null, ErrorCode.NON_EXISTENT)
+
+const commentsWithRepliesDocs = {
+    get: {
+        tags: tags,
+        summary: 'Fetch comment with replies',
+        description: `Fetches a comment with its paginated replies`,
+        parameters: [
+            COMMENT_SLUG_PARAM,
+            generateParamExample("page", "Current page of replies to fetch", "integer", 1),
+            generateParamExample("limit", "Number of replies per page to fetch", "integer", 100),
+        ],
+        responses: {
+            200: generateSwaggerResponseExample('Replies fetched successful response', SUCCESS_STATUS, "Replies fetched", CommentWithRepliesSchema),
+            404: COMMENT_NOT_FOUND_RESPONSE,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+    post: {
+        tags: tags,
+        summary: 'Create a reply',
+        description: `Allows authenticated users to create a reply`,
+        parameters: [COMMENT_SLUG_PARAM],
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Reply", CommentCreateSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Reply created response', SUCCESS_STATUS, "Reply created", ReplySchema),
+            404: COMMENT_NOT_FOUND_RESPONSE,
+            422: ERROR_EXAMPLE_422,
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    }
+}
+
+export { postsDocs, postDetailDocs, reactionsDocs, commentsDocs, commentsWithRepliesDocs }
