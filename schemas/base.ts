@@ -1,9 +1,6 @@
 import { Expose } from "class-transformer";
 import { Example } from "./utils";
 import { IsEmail } from "class-validator";
-import { IUser } from "../models/accounts";
-import FileProcessor from "../config/file_processors";
-import { File } from "../models/base";
 
 export class ResponseSchema {
     status: "success" | "failure" = "success";
@@ -75,4 +72,6 @@ export class PaginatedResponseSchema {
 
 const IMAGE_EXAMPLE = "https://image.com/whatever"
 const DATETIME_EXAMPLE = "2024-09-22T14:30:00Z"
-export { IMAGE_EXAMPLE, DATETIME_EXAMPLE }
+const FILE_TYPE_EXAMPLE = "image/png"
+const ID_EXAMPLE = "507f1f77bcf86cd799439011"
+export { IMAGE_EXAMPLE, DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, ID_EXAMPLE }
