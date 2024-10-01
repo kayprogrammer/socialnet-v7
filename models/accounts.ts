@@ -26,11 +26,13 @@ const Country = model<ICountry>('Country', CountrySchema);
 // Define the interface for the State model
 interface IState extends IBase {
   name: string;
-  country: Types.ObjectId;
+  code: string;
+  country: Types.ObjectId | ICountry;
 }
 // Create the State schema
 const StateSchema = new Schema<IState>({
   name: { type: String, required: true },
+  code: { type: String, required: true },
   country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country', required: true },
 }, { timestamps: true })
 
@@ -40,11 +42,11 @@ const State = model<IState>('State', StateSchema);
 // Define the interface for the City model
 interface ICity extends IBase {
   name: string;
-  state: Types.ObjectId;
+  state: Types.ObjectId | IState;
 }
 // Create the State schema
 const CitySchema = new Schema<ICity>({
-  name: { type: String, required: true, maxlength: 50 },
+  name: { type: String, required: true },
   state: { type: mongoose.Schema.Types.ObjectId, ref: 'State', required: true },
 }, { timestamps: true })
 
@@ -129,4 +131,4 @@ UserSchema.pre<IUser>('save', async function (next) {
 // Create the User model
 const User = model<IUser>('User', UserSchema);
 
-export { Country, State, City, User, IUser };
+export { Country, ICountry, State, City, User, IUser };

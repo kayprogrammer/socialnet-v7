@@ -21,4 +21,4 @@ run:
 	npm run dev
 
 init:
-	python manage.py initial_data
+	npm run seed
