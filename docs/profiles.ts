@@ -10,6 +10,7 @@ const profilesDocs = {
         tags: tags,
         summary: 'Fetch users',
         description: `Fetch all users closer to you`,
+        security: [{ BearerAuth: [] }],
         responses: {
             200: generateSwaggerResponseExample('Users fetched successful response', SUCCESS_STATUS, "Users fetched", ProfilesResponseSchema, null),
             500: ERROR_EXAMPLE_500

@@ -9,7 +9,7 @@ interface PaginationResponse<T> {
     itemsPerPage: number;
 }
 
-const paginateModel = async <T extends Document>(req: Request, modelClass: Model<T>, filter: Record<string,any> = {}, populateData: any): Promise<PaginationResponse<T>> =>  {
+const paginateModel = async <T extends Document>(req: Request, modelClass: Model<T>, filter: Record<string,any> = {}, populateData: any, sortData: Record<string,any> = { createdAt: -1 }): Promise<PaginationResponse<T>> =>  {
     // paginate data from the model
     const page = parseInt(req.query.page as string) || 1; // Default to page 1
     const limit = parseInt(req.query.limit as string) || 100; // Default to 100 items per page
@@ -20,7 +20,7 @@ const paginateModel = async <T extends Document>(req: Request, modelClass: Model
     const itemsCount = await modelClass.countDocuments(filter);
 
     // Get paginated items
-    const items = await modelClass.find(filter).populate(populateData).skip(skip).limit(limit).sort({ createdAt: -1 });
+    const items = await modelClass.find(filter).populate(populateData).skip(skip).limit(limit).sort(sortData);
     const totalPages = Math.ceil(itemsCount / limit)
     return { items, page, itemsCount, totalPages, itemsPerPage: limit }
 }

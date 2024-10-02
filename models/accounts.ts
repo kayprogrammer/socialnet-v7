@@ -27,13 +27,14 @@ const Country = model<ICountry>('Country', CountrySchema);
 interface IState extends IBase {
   name: string;
   code: string;
-  country: Types.ObjectId | ICountry;
+  country_: Types.ObjectId | ICountry;
+  country: string;
 }
 // Create the State schema
 const StateSchema = new Schema<IState>({
   name: { type: String, required: true },
   code: { type: String, required: true },
-  country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country', required: true },
+  country_: { type: mongoose.Schema.Types.ObjectId, ref: 'Country', required: true },
 }, { timestamps: true })
 
 // Create the State model
@@ -42,13 +43,24 @@ const State = model<IState>('State', StateSchema);
 // Define the interface for the City model
 interface ICity extends IBase {
   name: string;
-  state: Types.ObjectId | IState;
+  state_: Types.ObjectId | IState;
+  state: string
+  country: string;
 }
 // Create the State schema
 const CitySchema = new Schema<ICity>({
   name: { type: String, required: true },
-  state: { type: mongoose.Schema.Types.ObjectId, ref: 'State', required: true },
+  state_: { type: mongoose.Schema.Types.ObjectId, ref: 'State', required: true },
 }, { timestamps: true })
+
+CitySchema.virtual('state').get(function(this: ICity) {
+  return (this.state_ as IState)?.name;
+});
+
+CitySchema.virtual('country').get(function(this: ICity) {
+  let country = (this.state_ as IState).country_
+  return (country as ICountry)?.name;
+});
 
 // Create the City model
 const City = model<ICity>('City', CitySchema);
@@ -68,7 +80,8 @@ interface IUser extends IBase {
   isStaff: boolean;
   isActive: boolean;
   bio?: string;
-  city?: Types.ObjectId;
+  city_?: Types.ObjectId | ICity;
+  city?: string;
   dob?: Date;
   tokens: IToken[];
   otp?: number;
@@ -88,7 +101,7 @@ const UserSchema = new Schema<IUser>({
   isStaff: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   bio: { type: String, maxlength: 200, null: true, blank: true },
-  city: { type: Schema.Types.ObjectId, ref: 'City', null: true, blank: true },
+  city_: { type: Schema.Types.ObjectId, ref: 'City', null: true, blank: true },
   dob: { type: Date, null: true, blank: true },
   tokens: [
     {
@@ -106,6 +119,10 @@ UserSchema.virtual('name').get(function(this: IUser) {
 
 UserSchema.virtual('avatarUrl').get(function(this: IUser) {
   return getFileUrl(this.avatar, "avatars")
+});
+
+UserSchema.virtual('city').get(function(this: IUser) {
+  return (this.city_ as ICity)?.name;
 });
 
 // Pre-save hook to generate a unique username
@@ -131,4 +148,12 @@ UserSchema.pre<IUser>('save', async function (next) {
 // Create the User model
 const User = model<IUser>('User', UserSchema);
 
-export { Country, ICountry, State, City, User, IUser };
+// Define the interface for the Guest model
+interface IGuest extends IBase {
+}
+// Create the Guest schema
+const GuestSchema = new Schema<IGuest>({
+}, { timestamps: true })
+const Guest = model<IGuest>('Guest', GuestSchema);
+
+export { Country, ICountry, State, IState, City, ICity, User, IUser, Guest, IGuest };

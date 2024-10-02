@@ -1,48 +1,116 @@
 import bcrypt from 'bcryptjs';
-import { IUser, User } from '../models/accounts';
+import { ICity, ICountry, IState, IUser, User } from '../models/accounts';
 import ENV from '../config/config';
-import { Types } from 'mongoose';
+import { PipelineStage, Types } from 'mongoose';
 import * as jwt from "jsonwebtoken";
 import { randomStr } from '../config/utils';
+import { getFileUrl } from '../models/utils';
 
-// import { UserProfile } from './models/UserProfile';
+const findUsersSortedByProximity = async (user: IUser | null ) => {
+    if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]);
 
-// const findUsersInSameCity = async (userId: string) => {
-//   const user = await UserProfile.findById(userId).populate({
-//     path: 'city',
-//     populate: {
-//       path: 'state',
-//       populate: {
-//         path: 'country',
-//       },
-//     },
-//   });
+    let city = user.city_ as ICity;
+    let state = city.state_ as IState;
+    let country = state.country_ as ICountry;
 
-//   if (!user) return null;
+    // Aggregation pipeline to find users by city, state, and country
+   
+    const pipeline: PipelineStage[] = [
+        {
+          $match: {
+            _id: { $ne: user._id }, // Exclude current user
+          },
+        },
+        {
+          $lookup: {
+            from: 'cities',
+            localField: 'city_',
+            foreignField: '_id',
+            as: 'cityDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$cityDetails',
+            preserveNullAndEmptyArrays: true, // Include users without city details
+          },
+        },
+        {
+          $lookup: {
+            from: 'states',
+            localField: 'cityDetails.state_',
+            foreignField: '_id',
+            as: 'stateDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$stateDetails',
+            preserveNullAndEmptyArrays: true, // Include users without state details
+          },
+        },
+        {
+          $lookup: {
+            from: 'countries',
+            localField: 'stateDetails.country_',
+            foreignField: '_id',
+            as: 'countryDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$countryDetails',
+            preserveNullAndEmptyArrays: true, // Include users without country details
+          },
+        },
+        {
+            // Populate avatar
+            $lookup: {
+              from: 'files', // Assuming avatar is stored in the 'files' collection
+              localField: 'avatar',
+              foreignField: '_id',
+              as: 'avatarDetails',
+            },
+        },
+        // { $unwind: { path: '$avatarDetails', preserveNullAndEmptyArrays: true } }, // Preserve users without avatars
+        {
+          // Set proximity values
+          $addFields: {
+            _tmp: {
+              cityMatch: { $cond: [{ $eq: ['$cityDetails._id', city._id] }, 0, 1] }, // 0 if same city, 1 otherwise
+              stateMatch: { $cond: [{ $eq: ['$stateDetails._id', state._id] }, 0, 1] }, // 0 if same state
+              countryMatch: { $cond: [{ $eq: ['$countryDetails._id', country._id] }, 0, 1] }, // 0 if same country
+            },
+          },
+        },
+        {
+          // Sort by proximity order
+          $sort: {
+            '_tmp.cityMatch': 1,  // Closest city first
+            '_tmp.stateMatch': 1, // Then closest state
+            '_tmp.countryMatch': 1, // Then closest country
+          },
+        },
+        {
+          // Remove temporary fields
+          $unset: '_tmp',
+        },
+    ];
+    
+    const sortedUsers = await User.aggregate(pipeline);
+    console.log(sortedUsers)
+    // Process results to include generated URLs
+    // const processedUsers = sortedUsers.map(user => {
+    //     return {
+    //         ...user,
+    //         avatarUrl: getFileUrl(user.avatar, "avatars"), // Call your function here
+    //         // city: user.cityDetails.name, // Assuming you still want city name
+    //     };
+    // });
+    return sortedUsers;
+};
+  
 
-//   // Find users in the same city
-//   const usersInCity = await UserProfile.find({ city: user.city._id });
-
-//   // If no users in the same city, find users in the same state
-//   if (usersInCity.length === 0) {
-//     const usersInState = await UserProfile.find({
-//       city: { $in: await City.find({ state: user.city.state._id }).select('_id') },
-//     });
-
-//     if (usersInState.length === 0) {
-//       // If no users in the same state, find users in the same country
-//       const usersInCountry = await UserProfile.find({
-//         city: { $in: await City.find({ state: { $in: await State.find({ country: user.city.state.country._id }).select('_id') } }).select('_id') },
-//       });
-
-//       return usersInCountry;
-//     }
-
-//     return usersInState;
-//   }
-
-//   return usersInCity;
-// };
 
 const hashPassword = async (password: string) => {
     const hashedPassword: string = await bcrypt.hash(password, 10) 
@@ -120,7 +188,7 @@ const decodeAuth = async (token: string): Promise<IUser | null> => {
         return null;
       }
   
-      const user = await User.findOne({ _id: userId, "tokens.access": token });
+      const user = await User.findOne({ _id: userId, "tokens.access": token }).populate([{path: "city_", populate: {path: "state_", populate: {path: "country_"}}}, "avatar"]);
       return user;
     } catch (error) {
       return null;
@@ -131,4 +199,4 @@ const shortUserPopulation = (field: string): any => {
     return {path: field, select: "firstName lastName username avatar", populate: {path: 'avatar'}}
 }
 
-export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, shortUserPopulation };
+export { createUser, createOtp, hashPassword, checkPassword, createAccessToken, createRefreshToken, verifyRefreshToken, decodeAuth, shortUserPopulation, findUsersSortedByProximity };

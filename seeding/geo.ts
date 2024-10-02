@@ -21,7 +21,7 @@ const seedGeoData = async () => {
 
         const stateMappings = states.map(s => ({
             name: s.name,
-            country: country._id, // Reference the country
+            country_: country._id, // Reference the country
             code: s.isoCode, // Keep isoCode for cities reference later
         }));
 
@@ -34,10 +34,10 @@ const seedGeoData = async () => {
         let allInsertedStates = await StateModel.populate(insertedStates, { path: 'country' });
 
         for (const state of allInsertedStates) {
-            const cities = City.getCitiesOfState((state.country as ICountry).code, state.code);
+            const cities = City.getCitiesOfState((state.country_ as ICountry).code, state.code);
             const cityMappings = cities.map(c => ({
-                name: c.name,
-                state: state.id,
+              name: c.name,
+              state_: state.id,
             }));
 
             // Accumulate the state documents

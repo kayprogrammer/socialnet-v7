@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user: IUser
+      user_: IUser | null // For guest auth
     }
   }
 }

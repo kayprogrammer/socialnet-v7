@@ -1,13 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse, setDictAttr } from "../config/utils";
-import { paginateModel } from "../config/paginator";
-import { City, User } from "../models/accounts";
+import { paginateModel, paginateRecords } from "../config/paginator";
+import { City, ICity, ICountry, IState, IUser, User } from "../models/accounts";
 import { CitySchema, DeleteUserSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
-import { NotFoundError, RequestError, ValidationErr } from "../config/handlers";
+import { NotFoundError, ValidationErr } from "../config/handlers";
 import { authMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
-import { checkPassword } from "../managers/users";
+import { checkPassword, findUsersSortedByProximity } from "../managers/users";
 
 const profilesRouter = Router();
 
@@ -17,7 +17,9 @@ const profilesRouter = Router();
  */
 profilesRouter.get('', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let data = await paginateModel(req, User, {}, ["avatar", "city"])
+        let user = req.user_;
+        const users = await findUsersSortedByProximity(user)
+        let data = await paginateRecords(req, users)
         let usersData = { users: data.items, ...data }
         delete usersData.items
         return res.status(200).json(
@@ -40,10 +42,10 @@ profilesRouter.get('/cities', async (req: Request, res: Response, next: NextFunc
     try {
         let cityQuery = req.query.city || null
         let message = "Cities Fetched"
-        let cities: any[] = []
+        let cities: ICity[] = []
         if (cityQuery) {
             cityQuery = (cityQuery as string).replace(/[^a-zA-Z0-9]/g, '')
-            cities = await City.find({ name: { $regex: `^${cityQuery}`, $options: 'i' } }).populate({path: "state", populate: {path: "country"}})
+            cities = await City.find({ name: { $regex: `^${cityQuery}`, $options: 'i' } }).limit(10).populate({path: "state_", populate: {path: "country_"}})
         }
         if (cities.length === 0) message = "No match found"
         return res.status(200).json(
@@ -101,7 +103,7 @@ profilesRouter.patch('/profile', authMiddleware, validationMiddleware(ProfileEdi
             let file = await File.create({ resourceType: fileType })
             data.file = file.id
         }
-        let updatedUser = setDictAttr(data, user)
+        let updatedUser = setDictAttr(data, user as IUser)
         await updatedUser.save()
         return res.status(200).json(
             CustomResponse.success(

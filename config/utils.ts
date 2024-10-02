@@ -1,5 +1,4 @@
 import { plainToInstance } from "class-transformer";
-import snakecaseKeys from 'snakecase-keys';
 
 type ResponseBase = {
   message: string;
@@ -26,11 +25,7 @@ export class CustomResponse {
     } else {
       response.data = data as T;
     }
-
-    // Convert response keys to snake_case
-    const snakeCasedResponse: ResponseBase & { data?: T } = snakecaseKeys(response) as ResponseBase & { data?: T };
-
-    return snakeCasedResponse;
+    return response;
   }
 
   static error(message: string, code: string, data?: Record<string,any>): ResponseBase {

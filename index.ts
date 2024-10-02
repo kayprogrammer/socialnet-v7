@@ -8,6 +8,7 @@ import { handleError } from './middlewares/error';
 import { SWAGGER_PATHS } from './docs/paths';
 import feedRouter from './controllers/feed';
 import profilesRouter from './controllers/profiles';
+import { authOrGuestMiddleware } from './middlewares/auth';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -56,6 +57,8 @@ app.use(express.json());
 
 // Connect DB
 connectDB()
+
+app.use(authOrGuestMiddleware)
 
 // Register Routes
 app.use("/api/v7/general", generalRouter)
