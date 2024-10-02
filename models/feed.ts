@@ -8,14 +8,14 @@ interface IPost extends IBase {
     author: Types.ObjectId | IUser;
     text: string;
     slug: string;
-    image?: Types.ObjectId | IFile;
+    image: Types.ObjectId | IFile | null;
     reactions: { rType: string; userId: Types.ObjectId }[]; // Array of reaction objects
 
     // Not in database
     imageUrl: string | null;
     reactionsCount: number;
     commentsCount: number;
-    fileUploadData?: { publicId: string, signature: string, timestamp: string } | null;
+    fileUploadData: { publicId: string, signature: string, timestamp: string } | null;
 }
 
 enum REACTION_CHOICES_ENUM {

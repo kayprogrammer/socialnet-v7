@@ -73,18 +73,18 @@ interface IUser extends IBase {
   username: string;
   email: string;
   password: string;
-  avatar?: Types.ObjectId | IFile;
+  avatar: Types.ObjectId | IFile | null;
   avatarUrl: string | null;
   termsAgreement: boolean;
   isEmailVerified: boolean;
   isStaff: boolean;
   isActive: boolean;
-  bio?: string;
-  city_?: Types.ObjectId | ICity;
-  city?: string;
-  dob?: Date;
+  bio: string | null;
+  city_: Types.ObjectId | ICity | null;
+  city: string | null;
+  dob: Date | null;
   tokens: IToken[];
-  otp?: number;
+  otp: number | null;
   otpExpiry: Date; 
 }
 
@@ -100,9 +100,9 @@ const UserSchema = new Schema<IUser>({
   isEmailVerified: { type: Boolean, default: false },
   isStaff: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
-  bio: { type: String, maxlength: 200, null: true, blank: true },
+  bio: { type: String, maxlength: 200, default: null, blank: true },
   city_: { type: Schema.Types.ObjectId, ref: 'City', null: true, blank: true },
-  dob: { type: Date, null: true, blank: true },
+  dob: { type: Date, default: null, blank: true },
   tokens: [
     {
       access: { type: String, required: true },

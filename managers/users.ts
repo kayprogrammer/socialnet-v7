@@ -7,13 +7,13 @@ import { randomStr } from '../config/utils';
 import { getFileUrl } from '../models/utils';
 
 const findUsersSortedByProximity = async (user: IUser | null ) => {
-    if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]);
+    if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]).lean();
 
     let city = user.city_ as ICity;
     let state = city.state_ as IState;
     let country = state.country_ as ICountry;
 
-    // Aggregation pipeline to find users by city, state, and country
+    // Aggregation pipeline to sort users by city, state, and country
    
     const pipeline: PipelineStage[] = [
         {
@@ -26,60 +26,60 @@ const findUsersSortedByProximity = async (user: IUser | null ) => {
             from: 'cities',
             localField: 'city_',
             foreignField: '_id',
-            as: 'cityDetails',
+            as: 'city',
           },
         },
         {
           $unwind: {
-            path: '$cityDetails',
+            path: '$city',
             preserveNullAndEmptyArrays: true, // Include users without city details
           },
         },
         {
           $lookup: {
             from: 'states',
-            localField: 'cityDetails.state_',
+            localField: 'city.state_',
             foreignField: '_id',
-            as: 'stateDetails',
+            as: 'state',
           },
         },
         {
           $unwind: {
-            path: '$stateDetails',
+            path: '$state',
             preserveNullAndEmptyArrays: true, // Include users without state details
           },
         },
         {
           $lookup: {
             from: 'countries',
-            localField: 'stateDetails.country_',
+            localField: 'state.country_',
             foreignField: '_id',
-            as: 'countryDetails',
+            as: 'country',
           },
         },
         {
           $unwind: {
-            path: '$countryDetails',
+            path: '$country',
             preserveNullAndEmptyArrays: true, // Include users without country details
           },
         },
         {
-            // Populate avatar
-            $lookup: {
-              from: 'files', // Assuming avatar is stored in the 'files' collection
-              localField: 'avatar',
-              foreignField: '_id',
-              as: 'avatarDetails',
-            },
+          // Populate avatar
+          $lookup: {
+            from: 'files', 
+            localField: 'avatar',
+            foreignField: '_id',
+            as: 'avatar',
+          },
         },
-        // { $unwind: { path: '$avatarDetails', preserveNullAndEmptyArrays: true } }, // Preserve users without avatars
+        { $unwind: { path: '$avatar', preserveNullAndEmptyArrays: true } }, // Preserve users without avatars
         {
           // Set proximity values
           $addFields: {
             _tmp: {
-              cityMatch: { $cond: [{ $eq: ['$cityDetails._id', city._id] }, 0, 1] }, // 0 if same city, 1 otherwise
-              stateMatch: { $cond: [{ $eq: ['$stateDetails._id', state._id] }, 0, 1] }, // 0 if same state
-              countryMatch: { $cond: [{ $eq: ['$countryDetails._id', country._id] }, 0, 1] }, // 0 if same country
+              cityMatch: { $cond: [{ $eq: ['$city._id', city._id] }, 0, 1] }, // 0 if same city, 1 otherwise
+              stateMatch: { $cond: [{ $eq: ['$state._id', state._id] }, 0, 1] }, // 0 if same state
+              countryMatch: { $cond: [{ $eq: ['$country._id', country._id] }, 0, 1] }, // 0 if same country
             },
           },
         },
@@ -98,16 +98,15 @@ const findUsersSortedByProximity = async (user: IUser | null ) => {
     ];
     
     const sortedUsers = await User.aggregate(pipeline);
-    console.log(sortedUsers)
     // Process results to include generated URLs
-    // const processedUsers = sortedUsers.map(user => {
-    //     return {
-    //         ...user,
-    //         avatarUrl: getFileUrl(user.avatar, "avatars"), // Call your function here
-    //         // city: user.cityDetails.name, // Assuming you still want city name
-    //     };
-    // });
-    return sortedUsers;
+    const processedUsers = sortedUsers.map(user => {
+      return {
+        ...user,
+        avatarUrl: getFileUrl(user.avatar, "avatars"), // Call your function here
+        city: user.city.name, // Assuming you still want city name
+      };
+    });
+    return processedUsers;
 };
   
 

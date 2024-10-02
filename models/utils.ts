@@ -8,7 +8,7 @@ const randomStringGenerator = (length: number):string => {
     return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
-const getFileUrl = (file: IFile | Types.ObjectId | undefined, folder: string): string | null => {
+const getFileUrl = (file: IFile | Types.ObjectId | null, folder: string): string | null => {
     let url: string | null = null
     if (file) {
         file = file as IFile

@@ -4,7 +4,7 @@ import { paginateModel, paginateRecords } from "../config/paginator";
 import { City, ICity, ICountry, IState, IUser, User } from "../models/accounts";
 import { CitySchema, DeleteUserSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
-import { authMiddleware } from "../middlewares/auth";
+import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
 import { checkPassword, findUsersSortedByProximity } from "../managers/users";
@@ -15,7 +15,7 @@ const profilesRouter = Router();
  * @route GET /
  * @description Get Users.
  */
-profilesRouter.get('', async (req: Request, res: Response, next: NextFunction) => {
+profilesRouter.get('', authOrGuestMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         let user = req.user_;
         const users = await findUsersSortedByProximity(user)
