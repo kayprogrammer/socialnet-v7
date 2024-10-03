@@ -86,6 +86,8 @@ interface IUser extends IBase {
   tokens: IToken[];
   otp: number | null;
   otpExpiry: Date; 
+
+  fileUploadData: { publicId: string, signature: string, timestamp: string } | null;
 }
 
 // Create the User schema
@@ -122,7 +124,7 @@ UserSchema.virtual('avatarUrl').get(function(this: IUser) {
 });
 
 UserSchema.virtual('city').get(function(this: IUser) {
-  return (this.city_ as ICity)?.name;
+  return (this.city_ as ICity)?.name || null;
 });
 
 // Pre-save hook to generate a unique username
@@ -133,7 +135,7 @@ UserSchema.pre<IUser>('save', async function (next) {
     // Check for existing username and modify if necessary
     let isUnique = false;
     while (!isUnique) {
-      const existingUser = await User.findOne({ username: this.username });
+      const existingUser = await User.findOne({ username: this.username, _id: { $ne: this._id } });
       if (existingUser) {
         // Add a random 5-character alphanumeric string to make the username unique
         this.username = `${this.username}-${randomStringGenerator(5)}`;

@@ -1,13 +1,14 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse, setDictAttr } from "../config/utils";
-import { paginateModel, paginateRecords } from "../config/paginator";
-import { City, ICity, ICountry, IState, IUser, User } from "../models/accounts";
-import { CitySchema, DeleteUserSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
+import { paginateRecords } from "../config/paginator";
+import { City, ICity, IUser, User } from "../models/accounts";
+import { CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
 import { checkPassword, findUsersSortedByProximity } from "../managers/users";
+import FileProcessor from "../config/file_processors";
 
 const profilesRouter = Router();
 
@@ -66,7 +67,7 @@ profilesRouter.get('/cities', async (req: Request, res: Response, next: NextFunc
  */
 profilesRouter.get('/profile/:username', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findOne({ username: req.params.username }).populate("city", "avatar")
+        const user = await User.findOne({ username: req.params.username }).populate(["avatar", "city_"])
         if (!user) throw new NotFoundError("No user with that username")
         return res.status(200).json(
             CustomResponse.success(
@@ -92,24 +93,27 @@ profilesRouter.patch('/profile', authMiddleware, validationMiddleware(ProfileEdi
         const { cityId, fileType } = data;
         delete data.fileType
         delete data.cityId
+        let city = null
+        let file = null
         if (cityId) {
-            let city = await City.findOne({ id: cityId })
+            city = await City.findOne({ _id: cityId })
             if (!city) throw new ValidationErr("cityId", "No city with that ID")
-            data.city = cityId
-            
+            data.city_ = cityId
         }
 
         if (fileType) {
-            let file = await File.create({ resourceType: fileType })
-            data.file = file.id
+            file = await File.create({ resourceType: fileType })
+            data.avatar = file.id
         }
         let updatedUser = setDictAttr(data, user as IUser)
         await updatedUser.save()
+        if (city) updatedUser.city_ = city
+        if (file) updatedUser.fileUploadData = FileProcessor.generateFileSignature(file.id.toString(), "avatars")
         return res.status(200).json(
             CustomResponse.success(
                 "Profile updated", 
                 updatedUser, 
-                ProfileSchema
+                ProfileEditResponseSchema
             )    
         )
     } catch (error) {
@@ -125,7 +129,7 @@ profilesRouter.delete('/profile', authMiddleware, validationMiddleware(DeleteUse
     try {
         const user = req.user;
         const { password } = req.body;
-        if (!checkPassword(user, password)) throw new ValidationErr("password", "Incorrect password")
+        if (!(await checkPassword(user, password))) throw new ValidationErr("password", "Incorrect password")
         await user.deleteOne()
         return res.status(200).json(CustomResponse.success("Profile deleted"))
     } catch (error) {

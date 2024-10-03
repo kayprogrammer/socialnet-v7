@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
-import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, ID_EXAMPLE, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
-import { IsDateString, IsEnum, Length } from "class-validator";
+import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, FileUploadDataSchema, ID_EXAMPLE, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
+import { IsDateString, IsEnum, IsOptional, Length } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
 
@@ -57,11 +57,13 @@ export class ProfileEditSchema {
     @Example("John")
     @Expose()
     @Length(3, 50)
+    @IsOptional()
     firstName?: string;
     
     @Example("Doe")
     @Expose()
     @Length(3, 50)
+    @IsOptional()
     lastName?: string;
     
     @Example('Software Engineer | Backend Engineer')
@@ -71,6 +73,7 @@ export class ProfileEditSchema {
     @Example(DATETIME_EXAMPLE)
     @Expose()
     @IsDateString()
+    @IsOptional()
     dob?: Date;
     
     @Example(ID_EXAMPLE)
@@ -80,11 +83,19 @@ export class ProfileEditSchema {
     @Example(FILE_TYPE_EXAMPLE)
     @Expose()
     @IsEnum(ALLOWED_IMAGE_TYPES)
+    @IsOptional()
     fileType?: string;
 
-    city?: string;
-    file?: string;
+    city_?: string;
+    avatar?: string;
 }
+
+export class ProfileEditResponseSchema extends ProfileSchema {
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(FileUploadDataSchema))
+    fileUploadData?: FileUploadDataSchema;
+}
+
 
 export class CitySchema {
     @Example(ID_EXAMPLE)

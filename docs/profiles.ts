@@ -1,6 +1,6 @@
 import { ErrorCode } from "../config/handlers"
-import { CitySchema, DeleteUserSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles"
-import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
+import { CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles"
+import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
 import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
 const tags = ["Profiles (17)"]
@@ -42,7 +42,7 @@ const profileDocs = {
             generateParamExample("username", "Get user based on username", "string", "john-doe", "path"),
         ],
         responses: {
-            200: generateSwaggerResponseExample('Users fetched successful response', SUCCESS_STATUS, "Users fetched", ProfilesResponseSchema),
+            200: generateSwaggerResponseExample('User fetched successful response', SUCCESS_STATUS, "User fetched", ProfileSchema),
             404: generateSwaggerResponseExample('User not found response', FAILURE_STATUS, "No user with that username", null, ErrorCode.NON_EXISTENT),
             500: ERROR_EXAMPLE_500
         }
@@ -57,7 +57,8 @@ const profileModifyDocs = {
         security: [{ BearerAuth: [] }],
         requestBody: generateSwaggerRequestExample("Profile", ProfileEditSchema),
         responses: {
-            200: generateSwaggerResponseExample('Profile updated successful response', SUCCESS_STATUS, "Profile updated", ProfileSchema),
+            200: generateSwaggerResponseExample('Profile updated successful response', SUCCESS_STATUS, "Profile updated", ProfileEditResponseSchema),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             422: ERROR_EXAMPLE_422,
             500: ERROR_EXAMPLE_500
         }
@@ -70,6 +71,7 @@ const profileModifyDocs = {
         requestBody: generateSwaggerRequestExample("Profile Delete", DeleteUserSchema),
         responses: {
             200: generateSwaggerResponseExample('Profile deleted successful response', SUCCESS_STATUS, "Profile deleted"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
             422: ERROR_EXAMPLE_422,
             500: ERROR_EXAMPLE_500
         }

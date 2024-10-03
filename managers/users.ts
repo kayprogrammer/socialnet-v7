@@ -7,7 +7,7 @@ import { randomStr } from '../config/utils';
 import { getFileUrl } from '../models/utils';
 
 const findUsersSortedByProximity = async (user: IUser | null ) => {
-    if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]).lean();
+    if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]);
 
     let city = user.city_ as ICity;
     let state = city.state_ as IState;
