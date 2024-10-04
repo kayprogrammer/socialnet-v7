@@ -49,7 +49,7 @@ export class ProfileSchema {
 
 export class ProfilesResponseSchema extends PaginatedResponseSchema {
     @Expose()
-    @Example(generateSwaggerExampleFromSchema(ProfileSchema))
+    @Example([generateSwaggerExampleFromSchema(ProfileSchema)])
     @Type(() => ProfileSchema)
     users?: ProfileSchema[]
 }

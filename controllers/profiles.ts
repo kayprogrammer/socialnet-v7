@@ -7,8 +7,9 @@ import { NotFoundError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
-import { checkPassword, findUsersSortedByProximity } from "../managers/users";
+import { checkPassword } from "../managers/users";
 import FileProcessor from "../config/file_processors";
+import { findFriends, findUsersSortedByProximity } from "../managers/profiles";
 
 const profilesRouter = Router();
 
@@ -137,4 +138,27 @@ profilesRouter.delete('/profile', authMiddleware, validationMiddleware(DeleteUse
     }
 });
 
+/**
+ * @route GET /
+ * @description Get Friends.
+ */
+profilesRouter.get('/friends', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+
+        const friends = await findFriends(user._id)
+        let data = await paginateRecords(req, friends)
+        let friendsData = { users: data.items, ...data }
+        delete friendsData.items
+        return res.status(200).json(
+            CustomResponse.success(
+                'Friends fetched', 
+                friendsData, 
+                ProfilesResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
 export default profilesRouter

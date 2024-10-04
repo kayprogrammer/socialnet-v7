@@ -78,4 +78,18 @@ const profileModifyDocs = {
     }
 }
 
-export { profilesDocs, citiesDocs, profileDocs, profileModifyDocs }
+const friendsDocs = {
+    get: {
+        tags: tags,
+        summary: 'Fetch your friends',
+        description: `Fetch a paginated result of all your friends.`,
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Friends fetched successful response', SUCCESS_STATUS, "Friends fetched", ProfilesResponseSchema, null),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+}
+
+export { profilesDocs, citiesDocs, profileDocs, profileModifyDocs, friendsDocs }

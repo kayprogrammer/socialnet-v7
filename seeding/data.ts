@@ -9,13 +9,13 @@ import connectDB from "../config/db"
 const createSuperuser = async () => {
     let userDoc = { email: ENV.FIRST_SUPERUSER_EMAIL, password: ENV.FIRST_SUPERUSER_PASSWORD, firstName: "Test", lastName: "Admin"}
     const existingUser = await User.findOne({ email: userDoc.email })
-    if (!existingUser) await createUser(userDoc, true)
+    if (!existingUser) await createUser(userDoc, true, true)
 }
 
 const createClientUser = async () => {
     let userDoc = { email: ENV.FIRST_CLIENT_EMAIL, password: ENV.FIRST_CLIENT_PASSWORD, firstName: "Test", lastName: "Client"}
     const existingUser = await User.findOne({ email: userDoc.email })
-    if (!existingUser) await createUser(userDoc)
+    if (!existingUser) await createUser(userDoc, true)
 }
 
 const createData = async () => {
