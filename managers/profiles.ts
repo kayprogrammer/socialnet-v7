@@ -139,7 +139,7 @@ const findFriends = async (userId: Types.ObjectId) => {
   const friendIdList = friendIds.map(friend => friend.friend_id);
 
   // Query the `User` collection with the friend IDs and populate fields
-  const users = await User.find({ _id: { $in: friendIdList } }).populate('avatar').populate('city_')
+  const users = await User.find({ _id: { $in: friendIdList } }).populate(['city_', 'avatar'])
   return users
 }
 

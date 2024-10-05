@@ -1,7 +1,7 @@
 import { loginDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
 import { commentsDocs, commentsWithRepliesDocs, postDetailDocs, postsDocs, reactionsDocs, replyDocs } from "./feed"
 import { siteDetailDocs } from "./general"
-import { citiesDocs, friendsDocs, profileDocs, profileModifyDocs, profilesDocs } from "./profiles"
+import { citiesDocs, friendRequestsDocs, friendsDocs, profileDocs, profileModifyDocs, profilesDocs } from "./profiles"
 
 export const SWAGGER_PATHS = {
     // General routes
@@ -31,4 +31,5 @@ export const SWAGGER_PATHS = {
     "/profiles/profile/{username}": profileDocs,
     "/profiles/profile": profileModifyDocs,
     "/profiles/friends": friendsDocs,
+    "/profiles/friends/requests": friendRequestsDocs,
 }

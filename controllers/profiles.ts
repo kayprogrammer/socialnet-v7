@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse, setDictAttr } from "../config/utils";
-import { paginateRecords } from "../config/paginator";
+import { paginateModel, paginateRecords } from "../config/paginator";
 import { City, ICity, IUser, User } from "../models/accounts";
 import { CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
 import { NotFoundError, ValidationErr } from "../config/handlers";
@@ -10,6 +10,7 @@ import { File } from "../models/base";
 import { checkPassword } from "../managers/users";
 import FileProcessor from "../config/file_processors";
 import { findFriends, findUsersSortedByProximity } from "../managers/profiles";
+import { Friend } from "../models/profiles";
 
 const profilesRouter = Router();
 
@@ -123,10 +124,10 @@ profilesRouter.patch('/profile', authMiddleware, validationMiddleware(ProfileEdi
 });
 
 /**
- * @route DELETE /profile
+ * @route POST /profile
  * @description Delete account (irreversible).
  */
-profilesRouter.delete('/profile', authMiddleware, validationMiddleware(DeleteUserSchema), async (req: Request, res: Response, next: NextFunction) => {
+profilesRouter.post('/profile', authMiddleware, validationMiddleware(DeleteUserSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user;
         const { password } = req.body;
@@ -139,7 +140,7 @@ profilesRouter.delete('/profile', authMiddleware, validationMiddleware(DeleteUse
 });
 
 /**
- * @route GET /
+ * @route GET /friends
  * @description Get Friends.
  */
 profilesRouter.get('/friends', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
@@ -154,6 +155,30 @@ profilesRouter.get('/friends', authMiddleware, async (req: Request, res: Respons
             CustomResponse.success(
                 'Friends fetched', 
                 friendsData, 
+                ProfilesResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route GET /friends/requests
+ * @description Get Friend Requests.
+ */
+profilesRouter.get('/friends/requests', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+        let friendIds = await Friend.find({ requestee: user._id }).select("requester")
+        let friendIdList = friendIds.map(friend => friend.requester)
+        let data = await paginateModel(req, User, { _id: { $in: friendIdList } }, ['city_', 'avatar'])
+        let friendRequestsData = { users: data.items, ...data }
+        delete friendRequestsData.items
+        return res.status(200).json(
+            CustomResponse.success(
+                'Friends Requests fetched', 
+                friendRequestsData, 
                 ProfilesResponseSchema
             )    
         )

@@ -63,7 +63,7 @@ const profileModifyDocs = {
             500: ERROR_EXAMPLE_500
         }
     },
-    delete: {
+    post: {
         tags: tags,
         summary: 'Delete a user profile',
         description: `Allows an authenticated user to irreversibly delete his profile.`,
@@ -92,4 +92,18 @@ const friendsDocs = {
     },
 }
 
-export { profilesDocs, citiesDocs, profileDocs, profileModifyDocs, friendsDocs }
+const friendRequestsDocs = {
+    get: {
+        tags: tags,
+        summary: 'Fetch all friend requests',
+        description: `Fetch a paginated result of all your friend requests.`,
+        security: [{ BearerAuth: [] }],
+        responses: {
+            200: generateSwaggerResponseExample('Friends Requests fetched successful response', SUCCESS_STATUS, "Friends Requests fetched", ProfilesResponseSchema, null),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+}
+
+export { profilesDocs, citiesDocs, profileDocs, profileModifyDocs, friendsDocs, friendRequestsDocs }
