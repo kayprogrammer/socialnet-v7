@@ -1,7 +1,7 @@
 import { ErrorCode } from "../config/handlers"
-import { CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles"
+import { AcceptFriendRequestSchema, CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema, SendFriendRequestSchema } from "../schemas/profiles"
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
-import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
+import { generateParamExample, generateSwaggerExampleValue, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
 const tags = ["Profiles (17)"]
 
@@ -92,6 +92,18 @@ const friendsDocs = {
     },
 }
 
+const NON_EXISENT_USER = generateSwaggerExampleValue('Non-Existent User', FAILURE_STATUS, "This user does not exist", null, ErrorCode.NON_EXISTENT)
+const SEND_OR_DELETE_FRIEND_REQUEST_404_EXAMPLE = {
+    description: "Non-Existent User/Friend-Request",
+    content: {
+        "application/json": {
+            examples: {
+                example1: NON_EXISENT_USER,
+                example2: generateSwaggerExampleValue('Non-Existent Friend request', FAILURE_STATUS, "No pending friend request exist between you and that user", null, ErrorCode.NON_EXISTENT)
+            }
+        }
+    }
+}
 const friendRequestsDocs = {
     get: {
         tags: tags,
@@ -104,6 +116,39 @@ const friendRequestsDocs = {
             500: ERROR_EXAMPLE_500
         }
     },
+
+    post: {
+        tags: tags,
+        summary: 'Send Or Delete Friend Request',
+        description: `Allows an authenticated user to send or delete a friend request.`,
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Friend Request", SendFriendRequestSchema),
+        responses: {
+            201: generateSwaggerResponseExample('Friend request sent successful response', SUCCESS_STATUS, "Friend Request sent"),
+            200: generateSwaggerResponseExample('Friend request deleted successful response', SUCCESS_STATUS, "Friend Request deleted"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: NON_EXISENT_USER,
+            403: generateSwaggerResponseExample('Existent Friend Request', FAILURE_STATUS, "This user already sent you a friend request", null, ErrorCode.NOT_ALLOWED),
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+
+    put: {
+        tags: tags,
+        summary: 'Accept or Reject a friend request',
+        description: `Allows an authenticated user to accept or reject a friend request.`,
+        security: [{ BearerAuth: [] }],
+        requestBody: generateSwaggerRequestExample("Friend Request", AcceptFriendRequestSchema),
+        responses: {
+            200: generateSwaggerResponseExample('Friend Request Accepted/Rejected successful response', SUCCESS_STATUS, "Friend Request Accepted/Rejected"),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: SEND_OR_DELETE_FRIEND_REQUEST_404_EXAMPLE,
+            403: generateSwaggerResponseExample('Not-Allowed Action', FAILURE_STATUS, "You cannot accept or reject a friend request you sent", null, ErrorCode.NOT_ALLOWED),
+            422: ERROR_EXAMPLE_422,
+            500: ERROR_EXAMPLE_500
+        }
+    }
 }
 
 export { profilesDocs, citiesDocs, profileDocs, profileModifyDocs, friendsDocs, friendRequestsDocs }

@@ -2,15 +2,15 @@ import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { paginateModel, paginateRecords } from "../config/paginator";
 import { City, ICity, IUser, User } from "../models/accounts";
-import { CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema } from "../schemas/profiles";
-import { NotFoundError, ValidationErr } from "../config/handlers";
+import { AcceptFriendRequestSchema, CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema, SendFriendRequestSchema } from "../schemas/profiles";
+import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
 import { checkPassword } from "../managers/users";
 import FileProcessor from "../config/file_processors";
-import { findFriends, findUsersSortedByProximity } from "../managers/profiles";
-import { Friend } from "../models/profiles";
+import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
+import { Friend, FRIEND_REQUEST_STATUS_CHOICES } from "../models/profiles";
 
 const profilesRouter = Router();
 
@@ -180,6 +180,67 @@ profilesRouter.get('/friends/requests', authMiddleware, async (req: Request, res
                 'Friends Requests fetched', 
                 friendRequestsData, 
                 ProfilesResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /friends/requests
+ * @description Send Or Delete Friend Request.
+ */
+profilesRouter.post('/friends/requests', authMiddleware, validationMiddleware(SendFriendRequestSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+        const { username } = req.body;
+        const { otherUser, friend } = await findRequesteeAndFriendObj(user, username)
+        let statusCode = 201
+        let message = "Friend Request sent"
+        if (friend) {
+            statusCode = 200
+            message = "Friend Request removed"
+            if (friend.status === FRIEND_REQUEST_STATUS_CHOICES.ACCEPTED) message = "This user is already your friend"
+            else if (user.id.toString() !== friend.requester.toString()) throw new RequestError("This user already sent you a friend request", 403, ErrorCode.NOT_ALLOWED)
+            else await friend.deleteOne()
+        } else {
+            await Friend.create({ requester: user._id, requestee: otherUser._id })
+        }
+        return res.status(statusCode).json(
+            CustomResponse.success(
+                message, 
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route PUT /friends/requests
+ * @description Accept Or Reject Friend Request.
+ */
+profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(AcceptFriendRequestSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+        const { username, accepted } = req.body;
+        const { friend } = await findRequesteeAndFriendObj(user, username, FRIEND_REQUEST_STATUS_CHOICES.PENDING)
+        if (!friend) throw new NotFoundError("No pending friend request exist between you and that user")
+        if (friend.requester.toString() == user.id.toString()) throw new RequestError("You cannot accept or reject a friend request you sent", 403, ErrorCode.NOT_ALLOWED)
+        
+        // Update or delete friend request based on status
+        let message = "Accepted"
+        if (accepted) {
+            friend.status = FRIEND_REQUEST_STATUS_CHOICES.ACCEPTED
+            await friend.save()
+        } else {
+            message = "Rejected"
+            await friend.deleteOne()
+        }
+        return res.status(200).json(
+            CustomResponse.success(
+                `Friend Request ${message}`, 
             )    
         )
     } catch (error) {

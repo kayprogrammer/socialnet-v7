@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
 import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, FileUploadDataSchema, ID_EXAMPLE, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
-import { IsDateString, IsEnum, IsOptional, Length } from "class-validator";
+import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, Length } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
 
@@ -119,4 +119,18 @@ export class DeleteUserSchema {
     @Expose()
     @Example("password")
     password?: string;
+}
+
+export class SendFriendRequestSchema {
+    @Expose()
+    @IsNotEmpty()
+    @Example("john-doe")
+    username?: string;
+}
+
+export class AcceptFriendRequestSchema extends SendFriendRequestSchema {
+    @Expose()
+    @IsBoolean()
+    @Example(true)
+    accepted?: boolean;
 }

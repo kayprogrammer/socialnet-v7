@@ -1,7 +1,8 @@
 import { PipelineStage, Types } from "mongoose";
 import { ICity, ICountry, IState, IUser, User } from "../models/accounts";
-import { Friend, REQUEST_STATUS_CHOICES } from "../models/profiles";
+import { Friend, IFriend, FRIEND_REQUEST_STATUS_CHOICES } from "../models/profiles";
 import { getFileUrl } from "../models/utils";
+import { NotFoundError } from "../config/handlers";
 
 const findUsersSortedByProximity = async (user: IUser | null ) => {
     if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]);
@@ -111,7 +112,7 @@ const findFriends = async (userId: Types.ObjectId) => {
   const friendsPipeline: PipelineStage[] = [
     {
         $match: {
-            status: REQUEST_STATUS_CHOICES.ACCEPTED,
+            status: FRIEND_REQUEST_STATUS_CHOICES.ACCEPTED,
             $or: [
               { requester: userId }, 
               { requestee: userId }
@@ -143,4 +144,19 @@ const findFriends = async (userId: Types.ObjectId) => {
   return users
 }
 
-export { findUsersSortedByProximity, findFriends }
+const findRequesteeAndFriendObj = async (user: IUser, username: string, status: string | null = null): Promise<{ otherUser: IUser, friend: IFriend | null }> => {
+  const otherUser = await User.findOne({ username }) 
+  if (!otherUser) throw new NotFoundError("User does not exist")
+    const friendFilter: Record<string, any> = { 
+    $or: [
+      { requester: user._id, requestee: otherUser._id },
+      { requester: otherUser._id, requestee: user._id }
+    ]
+  }
+  if (status) friendFilter.status = status
+  const friend = await Friend.findOne(friendFilter)
+  return { otherUser, friend }
+
+}
+
+export { findUsersSortedByProximity, findFriends, findRequesteeAndFriendObj}

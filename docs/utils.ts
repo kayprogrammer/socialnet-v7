@@ -54,9 +54,9 @@ function generateSwaggerResponseExample<T extends object>(description: string, s
     description: description,
     content: {
       'application/json': {
-          examples: {
-            example1: exampleValue,
-          },
+        examples: {
+          example1: exampleValue,
+        },
       },
     },
   }
