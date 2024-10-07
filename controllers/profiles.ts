@@ -247,4 +247,28 @@ profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(Acc
         next(error)
     }
 });
+
+/**
+ * @route GET /notifications
+ * @description Get User Notifications.
+ */
+profilesRouter.get('/notifications', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+        let friendIds = await Friend.find({ requestee: user._id }).select("requester")
+        let friendIdList = friendIds.map(friend => friend.requester)
+        let data = await paginateModel(req, User, { _id: { $in: friendIdList } }, ['city_', 'avatar'])
+        let friendRequestsData = { users: data.items, ...data }
+        delete friendRequestsData.items
+        return res.status(200).json(
+            CustomResponse.success(
+                'Friends Requests fetched', 
+                friendRequestsData, 
+                ProfilesResponseSchema
+            )    
+        )
+    } catch (error) {
+        next(error)
+    }
+});
 export default profilesRouter
