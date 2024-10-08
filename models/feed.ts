@@ -80,7 +80,7 @@ interface IComment extends IBase {
     post: Types.ObjectId | IPost;
     text: string;
     slug: string;
-    parent: Types.ObjectId;
+    parent: Types.ObjectId | IComment;
     replies?: IComment[];
     reactions: { rType: string; userId: Types.ObjectId }[]; // Array of reaction objects
 

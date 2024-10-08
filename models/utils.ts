@@ -34,4 +34,11 @@ const getNotificationMessage = (obj: INotification): string => {
     return message
 }
 
-export { randomStringGenerator, getFileUrl, getNotificationMessage }
+const getNotificationPostSlug = (post: IPost | null, comment: IComment | null, reply: IComment | null): string | null => {
+    if (post !== null) return post.slug;
+    if (comment !== null) return (comment.post as IPost).slug
+    if (reply !== null) return (reply.post as IPost).slug
+    return null
+}
+
+export { randomStringGenerator, getFileUrl, getNotificationMessage, getNotificationPostSlug }

@@ -3,7 +3,7 @@ import { IUser } from "./accounts";
 import { IBase } from "./base";
 import { ErrorCode, RequestError } from "../config/handlers";
 import { IComment, IPost } from "./feed";
-import { getNotificationMessage } from "./utils";
+import { getNotificationMessage, getNotificationPostSlug } from "./utils";
 
 enum FRIEND_REQUEST_STATUS_CHOICES {
   PENDING = "PENDING",
@@ -74,12 +74,17 @@ interface INotification extends IBase {
   reply: IComment | Types.ObjectId;
   text: string | null
   message: string;
-  readBy: IUser[] | Types.ObjectId[];
+  readBy: Types.ObjectId[];
+
+  postSlug: string | null;
+  commentSlug: string | null;
+  replySlug: string | null;
+  isRead: boolean;
 }
 
 // Create the Notification Schema
 const NotificationSchema = new Schema<INotification>({
-  sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  sender: { type: Schema.Types.ObjectId, ref: 'User', required: false, default: null },
   receiver: { type: Schema.Types.ObjectId, ref: 'User', required: false, default: null },
   nType: { type: String, enum: NOTIFICATION_TYPE_CHOICES, required: true, maxlength: 50 },
   post: { type: Schema.Types.ObjectId, ref: 'Post', required: false, default: null },
@@ -90,7 +95,22 @@ const NotificationSchema = new Schema<INotification>({
 }, {timestamps: true})
 
 NotificationSchema.virtual('message').get(function(this: INotification) {
-  return getNotificationMessage(this)
+  const text = this.text
+  if(!text) return getNotificationMessage(this)
+  return text
+});
+
+NotificationSchema.virtual('postSlug').get(function(this: INotification) {
+  return getNotificationPostSlug(this.post as IPost, this.comment as IComment, this.reply as IComment)
+});
+
+NotificationSchema.virtual('commentSlug').get(function(this: INotification) {
+  const reply = this.reply as IComment 
+  return (this.comment as IComment)?.slug || (reply?.parent as IComment)?.slug || null
+});
+
+NotificationSchema.virtual('replySlug').get(function(this: INotification) {
+  return (this.reply as IComment)?.slug || null
 });
 
 // Create the Notification model

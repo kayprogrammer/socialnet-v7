@@ -187,7 +187,7 @@ export class ReadNotificationSchema {
     id?: string;
 
     @Expose()
-    @Example(ID_EXAMPLE)
+    @Example(true)
     @IsBoolean()
     @IsOptional()
     markAllAsRead?: boolean;

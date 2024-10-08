@@ -7,10 +7,11 @@ import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
-import { checkPassword } from "../managers/users";
+import { checkPassword, shortUserPopulation } from "../managers/users";
 import FileProcessor from "../config/file_processors";
-import { findFriends, findNotifications, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
-import { Friend, FRIEND_REQUEST_STATUS_CHOICES, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
+import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
+import { Friend, FRIEND_REQUEST_STATUS_CHOICES, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
+import { Types } from "mongoose";
 
 const profilesRouter = Router();
 
@@ -255,10 +256,21 @@ profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(Acc
 profilesRouter.get('/notifications', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         let user = req.user;
-        let notifications = await findNotifications(user)
-        let data = await paginateRecords(req, notifications)
-        let notificationsData = { notifications: data.items, ...data }
+        const populateData = [
+            shortUserPopulation("sender"), 
+            {path: "post", select: "slug"}, 
+            {path: "comment", select: "post slug", populate: {path: "post", select: "slug"}}, 
+            {path: "reply", select: "post parent slug", populate: {path: "parent post", select: "slug"}}, 
+        ]
+        let data = await paginateModel(req, Notification, { $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }] }, populateData)
+        const enhancedNotifications = (data.items as INotification[]).map(notification => {
+            // Example: Set 'isRead' dynamically based on current user
+            notification.isRead = notification.readBy.includes(user._id);
+            return notification;
+        });
+        let notificationsData = { notifications: enhancedNotifications, ...data }
         delete notificationsData.items
+        
         return res.status(200).json(
             CustomResponse.success(
                 'Notifications fetched', 
@@ -288,7 +300,7 @@ profilesRouter.post('/notifications', authMiddleware, validationMiddleware(ReadN
             );
         } else if (id) {
             const updatedNotification = await Notification.findOneAndUpdate(
-                { id, $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }]},
+                { _id: id, $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }]},
                 { $addToSet: { readBy: user._id } }, // Prevent duplicates
                 { new: true } // Return the updated document
             );
