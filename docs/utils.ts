@@ -62,7 +62,7 @@ function generateSwaggerResponseExample<T extends object>(description: string, s
   }
 }
 
-function generateParamExample(name: string, description: string, type: string, example: any, location: "query" | "path" = "query"){
+function generateParamExample(name: string, description: string, type: string, example: any, location: "query" | "path" = "query"): Record<string,any>{
   let required = false
   if (location === "path") required = true
   return {
@@ -77,4 +77,11 @@ function generateParamExample(name: string, description: string, type: string, e
   }
 }
 
-export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue, generateSwaggerExampleFromSchema, generateParamExample }
+function generatePaginationParamExample(objString: string): Record<string,any>[] {
+  return [
+    generateParamExample("page", `Current page of ${objString} to fetch`, "integer", 1),
+    generateParamExample("limit", `Number of ${objString} per page to fetch`, "integer", 100),
+  ]
+}
+
+export { generateSwaggerRequestExample, generateSwaggerResponseExample, generateSwaggerExampleValue, generateSwaggerExampleFromSchema, generateParamExample, generatePaginationParamExample }

@@ -2,15 +2,15 @@ import { Router, Request, Response, NextFunction } from "express";
 import { CustomResponse, setDictAttr } from "../config/utils";
 import { paginateModel, paginateRecords } from "../config/paginator";
 import { City, ICity, IUser, User } from "../models/accounts";
-import { AcceptFriendRequestSchema, CitySchema, DeleteUserSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema, SendFriendRequestSchema } from "../schemas/profiles";
+import { AcceptFriendRequestSchema, CitySchema, DeleteUserSchema, NotificationsResponseSchema, ProfileEditResponseSchema, ProfileEditSchema, ProfileSchema, ProfilesResponseSchema, ReadNotificationSchema, SendFriendRequestSchema } from "../schemas/profiles";
 import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config/handlers";
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
 import { checkPassword } from "../managers/users";
 import FileProcessor from "../config/file_processors";
-import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
-import { Friend, FRIEND_REQUEST_STATUS_CHOICES } from "../models/profiles";
+import { findFriends, findNotifications, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
+import { Friend, FRIEND_REQUEST_STATUS_CHOICES, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
 
 const profilesRouter = Router();
 
@@ -255,18 +255,49 @@ profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(Acc
 profilesRouter.get('/notifications', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         let user = req.user;
-        let friendIds = await Friend.find({ requestee: user._id }).select("requester")
-        let friendIdList = friendIds.map(friend => friend.requester)
-        let data = await paginateModel(req, User, { _id: { $in: friendIdList } }, ['city_', 'avatar'])
-        let friendRequestsData = { users: data.items, ...data }
-        delete friendRequestsData.items
+        let notifications = await findNotifications(user)
+        let data = await paginateRecords(req, notifications)
+        let notificationsData = { notifications: data.items, ...data }
+        delete notificationsData.items
         return res.status(200).json(
             CustomResponse.success(
-                'Friends Requests fetched', 
-                friendRequestsData, 
-                ProfilesResponseSchema
+                'Notifications fetched', 
+                notificationsData, 
+                NotificationsResponseSchema
             )    
         )
+    } catch (error) {
+        next(error)
+    }
+});
+
+/**
+ * @route POST /notifications
+ * @description Read notifications.
+ */
+profilesRouter.post('/notifications', authMiddleware, validationMiddleware(ReadNotificationSchema), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let user = req.user;
+        const { id, markAllAsRead } = req.body;
+        let message = "Notifications read"
+        if (markAllAsRead) {
+            // Mark all notifications as read
+            await Notification.updateMany(
+                { $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }]}, 
+                { $addToSet: { readBy: user._id } } // Add the userId to `readBy` if it doesn't already exist
+            );
+        } else if (id) {
+            const updatedNotification = await Notification.findOneAndUpdate(
+                { id, $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }]},
+                { $addToSet: { readBy: user._id } }, // Prevent duplicates
+                { new: true } // Return the updated document
+            );
+            if (!updatedNotification) throw new NotFoundError("User has no notification with that ID")
+            message = "Notification read"
+        } else {
+            throw new ValidationErr("id", "You must enter an ID or mark all as read")
+        }
+        return res.status(200).json(CustomResponse.success(message))
     } catch (error) {
         next(error)
     }

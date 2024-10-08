@@ -1,6 +1,6 @@
 import { Expose, Type } from "class-transformer";
 import { Example } from "./utils";
-import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, FileUploadDataSchema, ID_EXAMPLE, IMAGE_EXAMPLE, PaginatedResponseSchema, UserSchema } from "./base";
+import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, FileUploadDataSchema, ID_EXAMPLE, IMAGE_EXAMPLE, PaginatedResponseSchema, SLUG_EXAMPLE, UserSchema } from "./base";
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, Length } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
@@ -133,4 +133,62 @@ export class AcceptFriendRequestSchema extends SendFriendRequestSchema {
     @IsBoolean()
     @Example(true)
     accepted?: boolean;
+}
+
+export class NotificationSchema {
+    @Expose()
+    @Example(ID_EXAMPLE)
+    id?: string;
+    
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(UserSchema))
+    sender?: UserSchema;
+    
+    @Expose()
+    @Example("REACTION")
+    nType?: string;
+    
+    @Expose()
+    @Example("johndoe@example.com")
+    email?: string;
+
+    @Example("John Doe reacted to your post")
+    @Expose()
+    message?: string;
+
+    @Example(SLUG_EXAMPLE)
+    @Expose()
+    postSlug?: string;
+
+    @Example(SLUG_EXAMPLE)
+    @Expose()
+    commentSlug?: string;
+
+    @Example(SLUG_EXAMPLE)
+    @Expose()
+    replySlug?: string;
+
+    @Example(true)
+    @Expose()
+    isRead?: boolean;
+}
+
+export class NotificationsResponseSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Example([generateSwaggerExampleFromSchema(NotificationSchema)])
+    @Type(() => NotificationSchema)
+    notifications?: NotificationSchema[]
+}
+
+export class ReadNotificationSchema {
+    @Expose()
+    @Example(ID_EXAMPLE)
+    @IsOptional()
+    id?: string;
+
+    @Expose()
+    @Example(ID_EXAMPLE)
+    @IsBoolean()
+    @IsOptional()
+    markAllAsRead?: boolean;
 }

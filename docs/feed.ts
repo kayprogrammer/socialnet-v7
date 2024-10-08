@@ -1,7 +1,7 @@
 import { ErrorCode } from "../config/handlers";
 import { CommentCreateSchema, CommentSchema, CommentsResponseSchema, CommentWithRepliesSchema, PostCreateResponseSchema, PostCreateSchema, PostSchema, PostsResponseSchema, ReactionCreateSchema, ReactionSchema, ReactionsResponseSchema, ReplySchema } from "../schemas/feed";
 import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base";
-import { generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils";
+import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils";
 
 const tags = ["Feed (17)"]
 const postsDocs = {
@@ -9,10 +9,7 @@ const postsDocs = {
         tags: tags,
         summary: 'Fetch latest posts',
         description: `Fetch all the latest posts`,
-        parameters: [
-            generateParamExample("page", "Current page of posts to fetch", "integer", 1),
-            generateParamExample("limit", "Number of posts per page to fetch", "integer", 100),
-        ],
+        parameters: generatePaginationParamExample("posts"),
         responses: {
             200: generateSwaggerResponseExample('Posts fetched successful response', SUCCESS_STATUS, "Posts fetched", PostsResponseSchema),
             500: ERROR_EXAMPLE_500
@@ -91,6 +88,7 @@ const reactionsDocs = {
         parameters: [
             POST_SLUG_FOR_REACTION_PARAM,
             generateParamExample("reactionType", "Filter by reaction type", "string", "LIKE"),
+            ...generatePaginationParamExample("reactions")
         ],
         responses: {
             200: generateSwaggerResponseExample('Reactions fetched successful response', SUCCESS_STATUS, "Reactions fetched", ReactionsResponseSchema),
@@ -142,9 +140,8 @@ const commentsDocs = {
         description: `Fetches paginated comments of a post`,
         parameters: [
             SLUG_PARAM,
-            generateParamExample("page", "Current page of comments to fetch", "integer", 1),
-            generateParamExample("limit", "Number of comments per page to fetch", "integer", 100),
-        ],
+            ...generatePaginationParamExample("comments")
+            ],
         responses: {
             200: generateSwaggerResponseExample('Comments fetched successful response', SUCCESS_STATUS, "Comments fetched", CommentsResponseSchema),
             404: POST_NOT_FOUND_RESPONSE,
@@ -178,8 +175,7 @@ const commentsWithRepliesDocs = {
         description: `Fetches a comment with its paginated replies`,
         parameters: [
             COMMENT_SLUG_PARAM,
-            generateParamExample("page", "Current page of replies to fetch", "integer", 1),
-            generateParamExample("limit", "Number of replies per page to fetch", "integer", 100),
+            ...generatePaginationParamExample("replies")
         ],
         responses: {
             200: generateSwaggerResponseExample('Replies fetched successful response', SUCCESS_STATUS, "Replies fetched", CommentWithRepliesSchema),
