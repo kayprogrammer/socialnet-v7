@@ -9,6 +9,7 @@ import { SWAGGER_PATHS } from './docs/paths';
 import feedRouter from './controllers/feed';
 import profilesRouter from './controllers/profiles';
 import { authOrGuestMiddleware } from './middlewares/auth';
+import chatsRouter from './controllers/chats';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -65,6 +66,7 @@ app.use("/api/v7/general", generalRouter)
 app.use("/api/v7/auth", authRouter)
 app.use("/api/v7/feed", feedRouter)
 app.use("/api/v7/profiles", profilesRouter)
+app.use("/api/v7/chats", chatsRouter)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

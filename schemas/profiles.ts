@@ -4,6 +4,7 @@ import { DATETIME_EXAMPLE, FILE_TYPE_EXAMPLE, FileUploadDataSchema, ID_EXAMPLE, 
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, Length } from "class-validator";
 import { ALLOWED_IMAGE_TYPES } from "../config/file_processors";
 import { generateSwaggerExampleFromSchema } from "../docs/utils";
+import { NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
 
 export class ProfileSchema {
     @Expose()
@@ -145,7 +146,7 @@ export class NotificationSchema {
     sender?: UserSchema;
     
     @Expose()
-    @Example("REACTION")
+    @Example(NOTIFICATION_TYPE_CHOICES.REACTION)
     nType?: string;
     
     @Expose()

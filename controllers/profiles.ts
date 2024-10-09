@@ -11,7 +11,6 @@ import { checkPassword, shortUserPopulation } from "../managers/users";
 import FileProcessor from "../config/file_processors";
 import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
 import { Friend, FRIEND_REQUEST_STATUS_CHOICES, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
-import { Types } from "mongoose";
 
 const profilesRouter = Router();
 
