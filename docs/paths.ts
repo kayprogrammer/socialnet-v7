@@ -1,5 +1,5 @@
 import { loginDocs, logoutDocs, passwordResetDocs, passwordResetRequestEmailDocs, refreshTokenDocs, registerDocs, resendVerificationEmailDocs, verifyEmailDocs } from "./auth"
-import { chatsDocs, messagesDocs } from "./chats"
+import { chatsDocs, groupCreateDocs, messageDocs, messagesDocs } from "./chats"
 import { commentsDocs, commentsWithRepliesDocs, postDetailDocs, postsDocs, reactionsDocs, replyDocs } from "./feed"
 import { siteDetailDocs } from "./general"
 import { citiesDocs, friendRequestsDocs, friendsDocs, notificationsDocs, profileDocs, profileModifyDocs, profilesDocs } from "./profiles"
@@ -38,4 +38,6 @@ export const SWAGGER_PATHS = {
     // Chat routes
     "/chats": chatsDocs,
     "/chats/{id}": messagesDocs,
+    "/chats/messages/{id}": messageDocs,
+    "/chats/groups/group": groupCreateDocs
 }

@@ -19,15 +19,16 @@ interface IChat extends IBase {
     imageUrl: string | null;
     latestMessage: LatestMessageSchema | null;
     messages: IMessage[];
+    fileUploadData: { publicId: string, signature: string, timestamp: string } | null;
 }
 
 // Create the Chat Schema
 const ChatSchema = new Schema<IChat>({
-    name: { type: String, required: false, default: null, maxlength: 500 }, // For Group name
+    name: { type: String, required: false, default: null, maxlength: 50 }, // For Group name
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     cType: { type: String, enum: CHAT_TYPE_CHOICES, required: true, default: CHAT_TYPE_CHOICES.DM },
     users: [{type: Schema.Types.ObjectId, ref: 'User', required: true }], // Users who are members of the group.
-    description: { type: String, required: false, default: null, maxlength: 500 }, // For Group description
+    description: { type: String, required: false, default: null, maxlength: 100 }, // For Group description
     image: { type: Schema.Types.ObjectId, ref: 'File', required: false, default: null }, // For Group image
 }, {timestamps: true})
 
