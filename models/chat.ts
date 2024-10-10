@@ -18,6 +18,7 @@ interface IChat extends IBase {
     image: Types.ObjectId | IFile | null; 
     imageUrl: string | null;
     latestMessage: LatestMessageSchema | null;
+    messages: IMessage[];
 }
 
 // Create the Chat Schema

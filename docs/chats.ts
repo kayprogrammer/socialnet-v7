@@ -1,7 +1,9 @@
 import { ALLOWED_FILE_TYPES } from "../config/file_processors"
-import { ChatsResponseSchema, MessageSentResponseSchema, SendMessageSchema } from "../schemas/chats"
-import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, SUCCESS_STATUS } from "./base"
-import { generatePaginationParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
+import { ErrorCode } from "../config/handlers"
+import { ID_EXAMPLE } from "../schemas/base"
+import { ChatsResponseSchema, MessageSentResponseSchema, MessagesResponseSchema, SendMessageSchema } from "../schemas/chats"
+import { ERROR_EXAMPLE_422, ERROR_EXAMPLE_500, ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN, FAILURE_STATUS, SUCCESS_STATUS } from "./base"
+import { generatePaginationParamExample, generateParamExample, generateSwaggerRequestExample, generateSwaggerResponseExample } from "./utils"
 
 const tags = ["Chats (11)"]
 
@@ -43,4 +45,25 @@ const chatsDocs = {
     },
 }
 
-export { chatsDocs }
+const NON_EXISTENT_CHAT_ID = generateSwaggerResponseExample('Non-Existent chat error response', FAILURE_STATUS, "User has no chat with that ID", null, ErrorCode.NON_EXISTENT)
+
+const CHAT_ID_FOR_MESSAGES_PARAM = generateParamExample("id", "ID of the chat", "string", ID_EXAMPLE, "path")
+
+const messagesDocs = {
+    get: {
+        tags: tags,
+        summary: 'Fetch chat messages',
+        description: `
+            This endpoint retrieves all messages in a chat.
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [CHAT_ID_FOR_MESSAGES_PARAM ,...generatePaginationParamExample("messages")],
+        responses: {
+            200: generateSwaggerResponseExample('Messages fetched successful response', SUCCESS_STATUS, "Messages fetched", MessagesResponseSchema),
+            401: ERROR_EXAMPLE_UNAUTHORIZED_USER_WITH_INVALID_TOKEN,
+            404: NON_EXISTENT_CHAT_ID,
+            500: ERROR_EXAMPLE_500
+        }
+    },
+}
+export { chatsDocs, messagesDocs }

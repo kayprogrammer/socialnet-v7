@@ -124,3 +124,25 @@ export class MessageSentResponseSchema extends MessageSchema {
     @Example(generateSwaggerExampleFromSchema(FileUploadDataSchema))
     fileUploadData?: FileUploadDataSchema;
 }
+
+export class MessagesDataSchema extends PaginatedResponseSchema {
+    @Expose()
+    @Example([generateSwaggerExampleFromSchema(MessageSchema)])
+    @Type(() => MessageSchema)
+    items?: MessageSchema[];
+}
+
+export class MessagesResponseSchema {
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(ChatSchema))
+    chat?: ChatSchema;
+
+    @Expose()
+    @Example(generateSwaggerExampleFromSchema(MessagesDataSchema))
+    messages?: MessagesDataSchema;
+
+    @Expose()
+    @Example([generateSwaggerExampleFromSchema(UserSchema)])
+    @Type(() => UserSchema)
+    users?: UserSchema[];
+}
