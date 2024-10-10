@@ -1,14 +1,15 @@
 import { model, Schema, Types } from "mongoose";
 import { IUser } from "./accounts";
-import { IFile } from "./base";
+import { IBase, IFile } from "./base";
 import { getFileUrl } from "./utils";
 import { ErrorCode, RequestError } from "../config/handlers";
+import { LatestMessageSchema } from "../schemas/chats";
 
 enum CHAT_TYPE_CHOICES {
     DM = "DM",
     GROUP = "GROUP"
 }
-interface IChat {
+interface IChat extends IBase {
     name: string | null;
     owner: Types.ObjectId | IUser;
     cType: CHAT_TYPE_CHOICES;
@@ -16,6 +17,7 @@ interface IChat {
     description: string | null;
     image: Types.ObjectId | IFile | null; 
     imageUrl: string | null;
+    latestMessage: LatestMessageSchema | null;
 }
 
 // Create the Chat Schema
@@ -32,21 +34,38 @@ ChatSchema.virtual('imageUrl').get(function(this: IChat) {
     return getFileUrl(this.image, "chats")
 });
 
+ChatSchema.methods.toString = function() {
+    return this.id
+}
+
 ChatSchema.pre('save', async function (next) {
     let cType = this.cType;
-    if (cType === CHAT_TYPE_CHOICES.DM && (this.name || this.description || this.image)) return next(new RequestError('DMs cannot have name, image and description', 403, ErrorCode.NOT_ALLOWED));
-    if (cType === CHAT_TYPE_CHOICES.GROUP && !this.name) return next(new RequestError('Enter name for group chat', 403, ErrorCode.NOT_ALLOWED));
+    let name = this.name
+    if (cType === CHAT_TYPE_CHOICES.DM && (name || this.description || this.image)) return next(new RequestError('DMs cannot have name, image and description', 403, ErrorCode.NOT_ALLOWED));
+    if (cType === CHAT_TYPE_CHOICES.GROUP && !name) return next(new RequestError('Enter name for group chat', 403, ErrorCode.NOT_ALLOWED));
 }) 
+
+ChatSchema.virtual('latestMessage', {
+    ref: 'Message',
+    localField: '_id',
+    foreignField: 'chat',
+    justOne: true, // We only want the latest message
+    options: {
+      sort: { createdAt: -1 }, // Sort by creation date in descending order
+    },
+});
+
 // Create the Chat model
 const Chat = model<IChat>('Chat', ChatSchema);
 
-
-interface IMessage {
+interface IMessage extends IBase {
     chat: Types.ObjectId | IChat;
+    chatId: string;
     sender: Types.ObjectId | IUser;
     text: string;
     file: Types.ObjectId | IFile | null;
     fileUrl: string | null;
+    fileUploadData: { publicId: string, signature: string, timestamp: string } | null;
 }
 
 // Create the Message Schema
@@ -61,10 +80,14 @@ MessageSchema.virtual('fileUrl').get(function(this: IMessage) {
     return getFileUrl(this.file, "messages")
 });
 
+MessageSchema.virtual('chatId').get(function(this: IMessage) {
+    return this.chat.toString()
+});
+
 MessageSchema.pre('save', async function (next) {
     if (this.isNew) {
         // Update the chat so that the updated timestamp gets updated
-        await Chat.updateOne({ _id: this.chat })
+        await Chat.updateOne({ _id: this.chat }, {})
         next()
     }
 }) 
@@ -72,4 +95,4 @@ MessageSchema.pre('save', async function (next) {
 // Create the Message model
 const Message = model<IMessage>('Message', MessageSchema);
 
-export { Chat, IChat, Message, IMessage }
+export { Chat, IChat, Message, IMessage, CHAT_TYPE_CHOICES }
