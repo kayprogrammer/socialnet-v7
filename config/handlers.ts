@@ -12,6 +12,8 @@ export class ErrorCode {
     static readonly NON_EXISTENT = "non_existent";
     static readonly INVALID_OWNER = "invalid_owner";
     static readonly INVALID_PAGE = "invalid_page";
+    static readonly INVALID_PARAM = "invalid_param";
+    static readonly INVALID_MEMBER = "invalid_member";
     static readonly INVALID_VALUE = "invalid_value";
     static readonly NOT_ALLOWED = "not_allowed";
     static readonly INVALID_DATA_TYPE = "invalid_data_type";

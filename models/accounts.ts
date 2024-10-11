@@ -150,12 +150,4 @@ UserSchema.pre<IUser>('save', async function (next) {
 // Create the User model
 const User = model<IUser>('User', UserSchema);
 
-// Define the interface for the Guest model
-interface IGuest extends IBase {
-}
-// Create the Guest schema
-const GuestSchema = new Schema<IGuest>({
-}, { timestamps: true })
-const Guest = model<IGuest>('Guest', GuestSchema);
-
-export { Country, ICountry, State, IState, City, ICity, User, IUser, Guest, IGuest };
+export { Country, ICountry, State, IState, City, ICity, User, IUser };

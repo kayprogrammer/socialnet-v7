@@ -10,6 +10,9 @@ import feedRouter from './controllers/feed';
 import profilesRouter from './controllers/profiles';
 import chatsRouter from './controllers/chats';
 import { authMiddleware } from './middlewares/auth';
+import expressWs from 'express-ws';
+import chatSocketRouter from './sockets/chat';
+import { authWsMiddleware } from './sockets/auth';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -53,7 +56,8 @@ const swaggerDocument = {
   },
 };
 
-const app: Application = express();
+const app: any = express();
+expressWs(app)
 app.use(express.json());
 
 // Connect DB
@@ -65,6 +69,7 @@ app.use("/api/v7/auth", authRouter)
 app.use("/api/v7/feed", feedRouter)
 app.use("/api/v7/profiles", profilesRouter)
 app.use("/api/v7/chats", authMiddleware, chatsRouter)
+app.ws("/api/v7/ws/chat/:id", authWsMiddleware, chatSocketRouter)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
