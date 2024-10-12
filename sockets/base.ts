@@ -38,15 +38,25 @@ const validateSocketEntry = async (ws: WebSocket, body: string, schema: any): Pr
     return parsedbody
 };
 
-const clients = new Set<WebSocket>(); // Store all connected WebSocket clients
+const notificationClients = new Set<WebSocket>(); // Store all connected WebSocket clients
+const chatClients = new Set<WebSocket>(); // Store all connected WebSocket clients
+
 // Add client to the list when they connect
-const addClient = (ws: WebSocket) => {
-    clients.add(ws);
+const addClient = (ws: WebSocket, wType: "notification" | "chat" = "notification") => {
+    if (wType === "notification") {
+        notificationClients.add(ws)
+    } else {
+        chatClients.add(ws)
+    }
 };
 
 // Remove client from the list when they disconnect
-const removeClient = (ws: WebSocket) => {
-    clients.delete(ws);
+const removeClient = (ws: WebSocket, wType: "notification" | "chat" = "notification") => {
+    if (wType === "notification") {
+        notificationClients.delete(ws)
+    } else {
+        chatClients.delete(ws)
+    }
 };
 
-export { WSError, validateSocketEntry, clients, addClient, removeClient }
+export { WSError, validateSocketEntry, notificationClients, chatClients, addClient, removeClient }

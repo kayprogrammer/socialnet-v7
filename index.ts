@@ -11,8 +11,9 @@ import profilesRouter from './controllers/profiles';
 import chatsRouter from './controllers/chats';
 import { authMiddleware } from './middlewares/auth';
 import expressWs from 'express-ws';
-import chatSocketRouter from './sockets/chat';
+import chatSocket from './sockets/chat';
 import { authWsMiddleware } from './sockets/auth';
+import notificationSocket from './sockets/notification';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -69,7 +70,8 @@ app.use("/api/v7/auth", authRouter)
 app.use("/api/v7/feed", feedRouter)
 app.use("/api/v7/profiles", profilesRouter)
 app.use("/api/v7/chats", authMiddleware, chatsRouter)
-app.ws("/api/v7/ws/chat/:id", authWsMiddleware, chatSocketRouter)
+app.ws("/api/v7/ws/chats/:id", authWsMiddleware, chatSocket)
+app.ws("/api/v7/ws/notifications", authWsMiddleware, notificationSocket)
 
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
