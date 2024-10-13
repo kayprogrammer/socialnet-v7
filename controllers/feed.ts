@@ -304,7 +304,7 @@ feedRouter.post('/comments/:slug', authMiddleware, validationMiddleware(CommentC
         const reply = await Comment.create({ author: user.id, post: comment.post, parent: comment.id, text })
         reply.author = user
         // Create and send notification in socket
-        const author = reply.author
+        const author = comment.author
         if(user.toString() != author.toString()) {
             let notification = await Notification.create({ sender: user._id, receiver: author, nType: NOTIFICATION_TYPE_CHOICES.REPLY, reply: reply._id })
             notification = await notification.populate(notificationPopulationData)
