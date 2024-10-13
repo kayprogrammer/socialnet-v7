@@ -10,6 +10,10 @@ import FileProcessor from "../config/file_processors";
 import { ErrorCode, NotFoundError, RequestError } from "../config/handlers";
 import { addOrUpdateReaction, getPostOrComment, removeReaction } from "../managers/feed";
 import { shortUserPopulation } from "../managers/users";
+import { findOrCreateNotification, notificationPopulationData, setFeedObjForNotification } from "../managers/profiles";
+import { Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
+import { sendNotificationInSocket } from "../sockets/notification";
+import { SOCKET_STATUS_CHOICES } from "../sockets/base";
 
 const feedRouter = Router();
 
@@ -162,10 +166,16 @@ feedRouter.post('/reactions/:slug', authMiddleware, validationMiddleware(Reactio
     try {
         const user = req.user;
         const { rType } = req.body;
-        let postOrComment = await getPostOrComment(req.params.slug)
+        const postOrComment = await getPostOrComment(req.params.slug)
         if (!postOrComment) throw new NotFoundError("No Post, Comment or Reply with that slug")
-        let reactionData = await addOrUpdateReaction(postOrComment, user.id, rType)
-        let dataToReturn = { user, rType: reactionData.rType }
+        const reactionData = await addOrUpdateReaction(postOrComment, user.id, rType)
+        const dataToReturn = { user, rType: reactionData.rType }
+
+        // Create and send notification in socket
+        if (user.toString() != postOrComment.author.toString()) {
+            const [notification, created] = await findOrCreateNotification(user, NOTIFICATION_TYPE_CHOICES.REACTION, postOrComment, postOrComment.author.toString())
+            if (created) sendNotificationInSocket(req.secure, req.get("host") as string, notification)
+        }
         return res.status(201).json(
             CustomResponse.success(
                 'Reaction created', 
@@ -188,6 +198,10 @@ feedRouter.delete('/reactions/:slug', authMiddleware, async (req: Request, res: 
         let postOrComment = await getPostOrComment(req.params.slug)
         if (!postOrComment) throw new NotFoundError("No Post, Comment or Reply with that slug")
         await removeReaction(postOrComment, user.id)
+        // Delete notification
+        const notificationData: Record<string, any> = setFeedObjForNotification({ sender: user._id, nType: NOTIFICATION_TYPE_CHOICES.REACTION }, postOrComment)
+        const notification = await Notification.findOne(notificationData)
+        if (notification) sendNotificationInSocket(req.secure, req.get("host") as string, notification, SOCKET_STATUS_CHOICES.DELETED)
         return res.status(200).json(CustomResponse.success('Reaction deleted'))
     } catch (error) {
         next(error)
@@ -231,6 +245,14 @@ feedRouter.post('/posts/:slug/comments', authMiddleware, validationMiddleware(Co
         const { text } = req.body;
         const comment = await Comment.create({ author: user.id, post: post.id, text })
         comment.author = user
+
+        // Create and send notification in socket
+        const author = post.author
+        if(user.toString() != author.toString()) {
+            let notification = await Notification.create({ sender: user._id, receiver: author, nType: NOTIFICATION_TYPE_CHOICES.COMMENT, comment: comment._id })
+            notification = await notification.populate(notificationPopulationData)
+            sendNotificationInSocket(req.secure, req.get("host") as string, notification)
+        }
         return res.status(201).json(
             CustomResponse.success(
                 'Comment created', 
@@ -281,6 +303,13 @@ feedRouter.post('/comments/:slug', authMiddleware, validationMiddleware(CommentC
         const { text } = req.body;
         const reply = await Comment.create({ author: user.id, post: comment.post, parent: comment.id, text })
         reply.author = user
+        // Create and send notification in socket
+        const author = reply.author
+        if(user.toString() != author.toString()) {
+            let notification = await Notification.create({ sender: user._id, receiver: author, nType: NOTIFICATION_TYPE_CHOICES.REPLY, reply: reply._id })
+            notification = await notification.populate(notificationPopulationData)
+            sendNotificationInSocket(req.secure, req.get("host") as string, notification)
+        }
         return res.status(201).json(
             CustomResponse.success(
                 'Reply created', 
@@ -328,6 +357,9 @@ feedRouter.delete('/comments/:slug', authMiddleware, async (req: Request, res: R
         let comment = await Comment.findOne({ slug: req.params.slug, parent: null })
         if (!comment) throw new NotFoundError("Comment does not exist")
         if (comment.author.toString() !== user.id) throw new RequestError("Comment is not yours to delete", 400, ErrorCode.INVALID_OWNER) 
+        // Delete notification and send in socket
+        const notification = await Notification.findOne({ sender: user._id, nType: NOTIFICATION_TYPE_CHOICES.COMMENT, comment: comment._id })
+        if(notification) sendNotificationInSocket(req.secure, req.get("host") as string, notification, SOCKET_STATUS_CHOICES.DELETED)
         await comment.deleteOne()
         return res.status(200).json(CustomResponse.success('Comment deleted'))
     } catch (error) {
@@ -390,6 +422,9 @@ feedRouter.delete('/replies/:slug', authMiddleware, async (req: Request, res: Re
         let reply = await Comment.findOne({ slug: req.params.slug, parent: { $ne: null } })
         if (!reply) throw new NotFoundError("Reply does not exist")
         if (reply.author.toString() !== user.id) throw new RequestError("Reply is not yours to delete", 400, ErrorCode.INVALID_OWNER) 
+        // Delete notification and send in socket
+        const notification = await Notification.findOne({ sender: user._id, nType: NOTIFICATION_TYPE_CHOICES.REPLY, reply: reply._id })
+        if(notification) sendNotificationInSocket(req.secure, req.get("host") as string, notification, SOCKET_STATUS_CHOICES.DELETED)
         await reply.deleteOne()
         return res.status(200).json(CustomResponse.success('Reply deleted'))
     } catch (error) {

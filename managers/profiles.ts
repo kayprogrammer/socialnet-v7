@@ -1,8 +1,10 @@
 import { PipelineStage, Types } from "mongoose";
 import { ICity, ICountry, IState, IUser, User } from "../models/accounts";
-import { Friend, IFriend, FRIEND_REQUEST_STATUS_CHOICES, NOTIFICATION_TYPE_CHOICES, Notification } from "../models/profiles";
+import { Friend, IFriend, FRIEND_REQUEST_STATUS_CHOICES, NOTIFICATION_TYPE_CHOICES, Notification, INotification } from "../models/profiles";
 import { getFileUrl } from "../models/utils";
 import { NotFoundError } from "../config/handlers";
+import { IComment, IPost } from "../models/feed";
+import { shortUserPopulation } from "./users";
 
 const findUsersSortedByProximity = async (user: IUser | null ) => {
     if (!user || !user.city_) return await User.find().populate(["avatar", "city_"]);
@@ -159,4 +161,30 @@ const findRequesteeAndFriendObj = async (user: IUser, username: string, status: 
 
 }
 
-export { findUsersSortedByProximity, findFriends, findRequesteeAndFriendObj }
+const setFeedObjForNotification = (data: Record<string,any>, obj: IPost | IComment): Record<string,any> => {
+  if ("commentsCount" in obj) data.post = obj._id // For post
+  else if (obj.parent) data.reply = obj._id // For reply
+  else data.comment = obj._id // For comment
+  return data
+}
+
+const notificationPopulationData = [
+  shortUserPopulation("sender"), 
+  {path: "post", select: "slug"}, 
+  {path: "comment", select: "post slug", populate: {path: "post", select: "slug"}}, 
+  {path: "reply", select: "post parent slug", populate: {path: "parent post", select: "slug"}}, 
+]
+
+const findOrCreateNotification = async (sender: IUser, nType: NOTIFICATION_TYPE_CHOICES, obj: IPost | IComment, receiverId: string): Promise<[INotification, boolean]> => {
+  const dataToCreate: Record<string,any> = setFeedObjForNotification({ sender: sender._id, nType, receiver: receiverId }, obj)
+  let notification = await Notification.findOneAndUpdate(dataToCreate, dataToCreate, { new: true }).populate(notificationPopulationData) 
+  let created = false
+  if (!notification) {
+    notification = await Notification.create(dataToCreate)
+    notification = await notification.populate(notificationPopulationData)
+    created = true
+  }
+  return [notification, created]
+}
+
+export { findUsersSortedByProximity, findFriends, findRequesteeAndFriendObj, findOrCreateNotification, setFeedObjForNotification, notificationPopulationData }

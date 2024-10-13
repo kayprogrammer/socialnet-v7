@@ -9,7 +9,7 @@ import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
 import { checkPassword, shortUserPopulation } from "../managers/users";
 import FileProcessor from "../config/file_processors";
-import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity } from "../managers/profiles";
+import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity, notificationPopulationData } from "../managers/profiles";
 import { Friend, FRIEND_REQUEST_STATUS_CHOICES, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
 
 const profilesRouter = Router();
@@ -255,13 +255,7 @@ profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(Acc
 profilesRouter.get('/notifications', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         let user = req.user;
-        const populateData = [
-            shortUserPopulation("sender"), 
-            {path: "post", select: "slug"}, 
-            {path: "comment", select: "post slug", populate: {path: "post", select: "slug"}}, 
-            {path: "reply", select: "post parent slug", populate: {path: "parent post", select: "slug"}}, 
-        ]
-        let data = await paginateModel(req, Notification, { $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }] }, populateData)
+        let data = await paginateModel(req, Notification, { $or: [{ receiver: user._id }, { nType: NOTIFICATION_TYPE_CHOICES.ADMIN }] }, notificationPopulationData)
         const enhancedNotifications = (data.items as INotification[]).map(notification => {
             // Example: Set 'isRead' dynamically based on current user
             notification.isRead = notification.readBy.includes(user._id);

@@ -1,7 +1,7 @@
-import { plainToInstance } from "class-transformer";
+import { Expose, plainToInstance } from "class-transformer";
 import { ErrorCode } from "../config/handlers";
 import { WebSocket } from 'ws';
-import { validate, ValidationError } from "class-validator";
+import { IsEnum, IsNotEmpty, validate, ValidationError } from "class-validator";
 
 type ResponseBase = {
     message: string;
@@ -59,4 +59,21 @@ const removeClient = (ws: WebSocket, wType: "notification" | "chat" = "notificat
     }
 };
 
-export { WSError, validateSocketEntry, notificationClients, chatClients, addClient, removeClient }
+enum SOCKET_STATUS_CHOICES {
+    CREATED = "CREATED",
+    UPDATED = "UPDATED",
+    DELETED = "DELETED"
+} 
+
+class SocketEntrySchema {
+    @Expose()
+    @IsNotEmpty()
+    @IsEnum(SOCKET_STATUS_CHOICES)
+    status?: SOCKET_STATUS_CHOICES;
+
+    @IsNotEmpty()
+    @Expose()
+    id?: string;
+}
+
+export { WSError, validateSocketEntry, notificationClients, chatClients, addClient, removeClient, SocketEntrySchema, SOCKET_STATUS_CHOICES }

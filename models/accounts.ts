@@ -147,6 +147,10 @@ UserSchema.pre<IUser>('save', async function (next) {
   next();
 });
 
+UserSchema.methods.toString = function() {
+  return this.id
+}
+
 // Create the User model
 const User = model<IUser>('User', UserSchema);
 

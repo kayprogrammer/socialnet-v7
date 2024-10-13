@@ -1,13 +1,12 @@
 import { Request } from "express";
 import { WebSocket } from 'ws';
+import WebSocketClient from "ws";
 import { IUser, User } from "../models/accounts";
 import { Chat, IChat, Message } from "../models/chat";
 import ENV from "../config/config";
-import { addClient, chatClients, removeClient, validateSocketEntry, WSError } from "./base";
+import { addClient, chatClients, removeClient, SOCKET_STATUS_CHOICES, SocketEntrySchema, validateSocketEntry, WSError } from "./base";
 import { ErrorCode } from "../config/handlers";
 import { Types } from "mongoose";
-import { Expose } from "class-transformer";
-import { IsNotEmpty } from "class-validator";
 
 
 const getUserAndChat = async (id: string, user: IUser): Promise<[IChat | null, IUser | null]> => {
@@ -36,16 +35,6 @@ const validateChatMembership = async (ws: WebSocket, id: string, user: IUser | s
     }
 }
 
-export class SocketMessageSchema {
-    @Expose()
-    @IsNotEmpty()
-    status?: "CREATED" | "UPDATED" | "DELETED";
-
-    @IsNotEmpty()
-    @Expose()
-    id?: string;
-}
-
 // Function to broadcast a message to all clients in the same chat
 const broadcastToChat = (chatID: string, objUser: IUser | null, message: string) => {
     chatClients.forEach((client: WebSocket) => {
@@ -72,14 +61,14 @@ const chatSocket = async (ws: WebSocket, req: Request) => {
         const user = ws.user
         const objUser = ws.objUser
         const chat = ws.chat
-        const data = await validateSocketEntry(ws, msg, SocketMessageSchema)
+        const data = await validateSocketEntry(ws, msg, SocketEntrySchema)
         // Validate message ownership
         if (user !== ENV.SOCKET_SECRET) {
-            if (!(await Message.findOne({ _id: data.id, sender: (user as IUser)._id }))) WSError(ws, 4003, ErrorCode.INVALID_OWNER, "Message isn't yours")
-            if (data.status === "DELETED") {
+            if (data.status === SOCKET_STATUS_CHOICES.DELETED) {
                 // Only in app client can handle this
                 WSError(ws, 4001, ErrorCode.NOT_ALLOWED, "Permissible only to in-app clients")
             }
+            if (!(await Message.findOne({ _id: data.id, sender: (user as IUser)._id }))) WSError(ws, 4003, ErrorCode.INVALID_OWNER, "You don't have a message with that ID")
         }
         
         if ((user as IUser)._id.toString() == objUser?._id.toString()) {
@@ -93,6 +82,15 @@ const chatSocket = async (ws: WebSocket, req: Request) => {
       removeClient(ws, "chat")
       console.log('Chat WebSocket disconnected');
     });
+}
+
+export const sendMessageDeletionInSocket = (secured: boolean, host: string, chatId: string, messageId: string) => {
+    const websocketScheme = secured ? "wss://" : "ws://"
+    const websocketUri = `${websocketScheme}${host}/api/v7/ws/chats/${chatId}`
+    const socket = new WebSocketClient(websocketUri, { headers: { Authorization: ENV.SOCKET_SECRET } })
+    socket.on("open", () => {
+        socket.send(JSON.stringify({id: messageId, status: SOCKET_STATUS_CHOICES.DELETED}))
+    })
 }
 
 export default chatSocket

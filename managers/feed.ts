@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { Comment, IComment, IPost, Post } from "../models/feed";
 import { shortUserPopulation } from "./users";
+import { IUser } from "../models/accounts";
 
 const getPostOrComment = async (slug: string): Promise<IPost | IComment | null> => {
     const post = await Post.findOne({ slug }).populate(shortUserPopulation("reactions.user"))
@@ -9,13 +10,13 @@ const getPostOrComment = async (slug: string): Promise<IPost | IComment | null> 
     return post || comment
 }
 
-const addOrUpdateReaction = async (postOrComment: IPost | IComment, userId: Types.ObjectId, rType: string): Promise<{ rType: string; userId: Types.ObjectId }> => {
+const addOrUpdateReaction = async (postOrComment: IPost | IComment, userId: Types.ObjectId, rType: string): Promise<{ rType: string; user: Types.ObjectId | IUser }> => {
   // Check if the user already has a reaction
-  let reactionData = postOrComment.reactions.find(reaction => reaction.userId.toString() === userId.toString());
+  let reactionData = postOrComment.reactions.find(reaction => reaction.user.toString() === userId.toString());
   if (reactionData) {
     reactionData.rType = rType;
   } else {
-    reactionData = { rType, userId }
+    reactionData = { rType, user: userId }
     postOrComment.reactions.push(reactionData);
   }
   await postOrComment.save();
@@ -23,7 +24,7 @@ const addOrUpdateReaction = async (postOrComment: IPost | IComment, userId: Type
 }
 
 const removeReaction = async (postOrComment: IPost | IComment, userId: Types.ObjectId): Promise<boolean> => {
-  const index = postOrComment.reactions.findIndex(reaction => reaction.userId.toString() === userId.toString())
+  const index = postOrComment.reactions.findIndex(reaction => reaction.user.toString() === userId.toString())
   const isRemovable = index !== -1
   if (isRemovable) {
     postOrComment.reactions.splice(index, 1)

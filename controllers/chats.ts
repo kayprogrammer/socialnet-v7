@@ -10,6 +10,7 @@ import { NotFoundError, ValidationErr } from "../config/handlers";
 import { File, IFile } from "../models/base";
 import FileProcessor from "../config/file_processors";
 import { handleGroupUsersAddOrRemove } from "../managers/chats";
+import { sendMessageDeletionInSocket } from "../sockets/chat";
 
 const chatsRouter = Router();
 
@@ -235,7 +236,10 @@ chatsRouter.delete('/messages/:id', async (req: Request, res: Response, next: Ne
         const message = await Message.findOne({ _id: req.params.id, sender: user._id }).populate("chat")
         if (!message) throw new NotFoundError("User has no message with that ID")
         const chat = message.chat as IChat
-        const messagesCount = await Message.countDocuments({ chat: chat._id })
+        const chatId = chat._id
+        const messagesCount = await Message.countDocuments({ chat: chatId })
+
+        sendMessageDeletionInSocket(req.secure, req.get("host") as string, chatId.toString(), message._id.toString())
 
         // Delete message and chat if its the last message in the dm being deleted
         if (messagesCount == 1 && chat.cType == CHAT_TYPE_CHOICES.DM) {

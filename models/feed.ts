@@ -9,7 +9,7 @@ interface IPost extends IBase {
     text: string;
     slug: string;
     image: Types.ObjectId | IFile | null;
-    reactions: { rType: string; userId: Types.ObjectId }[]; // Array of reaction objects
+    reactions: { rType: string; user: Types.ObjectId | IUser }[]; // Array of reaction objects
 
     // Not in database
     imageUrl: string | null;
@@ -80,9 +80,9 @@ interface IComment extends IBase {
     post: Types.ObjectId | IPost;
     text: string;
     slug: string;
-    parent: Types.ObjectId | IComment;
+    parent: Types.ObjectId | IComment | null;
     replies?: IComment[];
-    reactions: { rType: string; userId: Types.ObjectId }[]; // Array of reaction objects
+    reactions: { rType: string; user: Types.ObjectId | IUser }[]; // Array of reaction objects
 
     // Not in database
     reactionsCount: number;
