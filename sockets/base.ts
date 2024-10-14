@@ -9,7 +9,7 @@ type ResponseBase = {
     type?: ErrorCode; // Optional error type
 };
 
-const WSError = (ws: WebSocket, code: number, eType: ErrorCode, message: string, data: Record<string,any> | null = null) => {
+const WSError = (ws: WebSocket, code: number, eType: ErrorCode, message: string, data: Record<string,any> | null = null): boolean => {
     let response: ResponseBase & { data?: Record<string,any> } = {
         status: "failure",
         type: eType,
@@ -18,24 +18,30 @@ const WSError = (ws: WebSocket, code: number, eType: ErrorCode, message: string,
     if(data) response.data = data
     ws.send(JSON.stringify(response))
     ws.close(code, message)
+    return true
 }
 
 const validateSocketEntry = async (ws: WebSocket, body: string, schema: any): Promise<Record<string,any>> => {
-    const parsedbody = JSON.parse(body) 
-    const instance = plainToInstance(schema, parsedbody);
-    const errors: ValidationError[] = await validate(instance);
-    if (errors.length > 0) {
-        const formattedErrors = errors.reduce((acc, error) => {
-            if (error.constraints) {
-                // Get the first constraint message
-                const [firstConstraint] = Object.values(error.constraints);
-                acc[error.property] = firstConstraint;
-            }
-            return acc;
-        }, {} as Record<string, string>);
-        WSError(ws, 4220, ErrorCode.INVALID_ENTRY, "Invalid Entry", formattedErrors)
+    let parsedBody = {}
+    try {
+        parsedBody = JSON.parse(body) 
+        const instance = plainToInstance(schema, parsedBody) as any;
+        const errors: ValidationError[] = await validate(instance);
+        if (errors.length > 0) {
+            const formattedErrors = errors.reduce((acc, error) => {
+                if (error.constraints) {
+                    // Get the first constraint message
+                    const [firstConstraint] = Object.values(error.constraints);
+                    acc[error.property] = firstConstraint;
+                }
+                return acc;
+            }, {} as Record<string, string>);
+            WSError(ws, 4220, ErrorCode.INVALID_ENTRY, "Invalid Entry", formattedErrors)
+        }
+    } catch {
+        WSError(ws, 4220, ErrorCode.INVALID_ENTRY, "Invalid JSON")
     }
-    return parsedbody
+    return parsedBody
 };
 
 const notificationClients = new Set<WebSocket>(); // Store all connected WebSocket clients

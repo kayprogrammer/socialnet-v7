@@ -6,6 +6,13 @@ type ResponseBase = {
   code?: string; // Optional error code
 };
 
+export const convertSchemaData = <T, U, V extends T>(dataSchema: new () => V, data: U | U[]): any => {
+  return plainToInstance(dataSchema, data, {
+    excludeExtraneousValues: true,
+    enableImplicitConversion: true,
+  }) as any
+}
+
 export class CustomResponse {
   static success<T, U, V extends T | undefined>(
     message: string,
@@ -18,10 +25,7 @@ export class CustomResponse {
     };
 
     if (dataSchema && data !== undefined) {
-      response.data = plainToInstance(dataSchema, data, {
-        excludeExtraneousValues: true,
-        enableImplicitConversion: true,
-      }) as T; // Type assertion to ensure compatibility
+      response.data = convertSchemaData(dataSchema, data)
     } else {
       response.data = data as T;
     }

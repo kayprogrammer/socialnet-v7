@@ -239,7 +239,7 @@ chatsRouter.delete('/messages/:id', async (req: Request, res: Response, next: Ne
         const chatId = chat._id
         const messagesCount = await Message.countDocuments({ chat: chatId })
 
-        sendMessageDeletionInSocket(req.secure, req.get("host") as string, chatId.toString(), message._id.toString())
+        sendMessageDeletionInSocket(req.secure, req.get("host") as string, chat.toString(), message._id.toString())
 
         // Delete message and chat if its the last message in the dm being deleted
         if (messagesCount == 1 && chat.cType == CHAT_TYPE_CHOICES.DM) {

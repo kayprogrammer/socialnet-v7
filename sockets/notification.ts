@@ -9,6 +9,7 @@ import { Types } from "mongoose";
 import { INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";
 import { plainToInstance } from "class-transformer";
 import { NotificationSchema } from "../schemas/profiles";
+import { convertSchemaData } from "../config/utils";
 
 // Function to broadcast a notification to the right receivers
 const broadcastToNotificationReceivers = (notification: INotification, message: string): boolean => {
@@ -29,10 +30,10 @@ const notificationSocket = async (ws: WebSocket, req: Request) => {
     if (ws.user !== socketSecret) addClient(ws)
     ws.on('message', async (msg: string) => {
         const user = ws.user
-        if (user !== socketSecret) WSError(ws, 4001, ErrorCode.NOT_ALLOWED, "Permissible only to in-app clients")
+        if (user !== socketSecret) return WSError(ws, 4001, ErrorCode.NOT_ALLOWED, "Permissible only to in-app clients")
         const data = await validateSocketEntry(ws, msg, SocketEntrySchema)
         const notification = await Notification.findOne({ _id: data.id })
-        if (!notification) WSError(ws, 4004, ErrorCode.NON_EXISTENT, "Notification does not exist")
+        if (!notification) return WSError(ws, 4004, ErrorCode.NON_EXISTENT, "Notification does not exist")
         const broadcasted = broadcastToNotificationReceivers(notification as INotification, msg)
         if (broadcasted && data.status === SOCKET_STATUS_CHOICES.DELETED) await (notification as INotification).deleteOne()
     });
@@ -49,10 +50,7 @@ export const sendNotificationInSocket = (secured: boolean, host: string, notific
     let notificationData = { id: notification.id.toString(), status: status, nType: notification.nType }
     if ( status === SOCKET_STATUS_CHOICES.CREATED ) {
         // Set necessary notification values
-        notificationData = {status, ...plainToInstance(NotificationSchema, notification, {
-            excludeExtraneousValues: true,
-            enableImplicitConversion: true,
-        }) as any}
+        notificationData = {status, ...convertSchemaData(NotificationSchema, notification)}
     }
     
     const socket = new WebSocketClient(websocketUri, { headers: { Authorization: ENV.SOCKET_SECRET } })
