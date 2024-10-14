@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import env from './config/config';
 import connectDB from './config/db';

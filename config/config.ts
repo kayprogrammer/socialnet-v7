@@ -30,6 +30,7 @@ const envSchema = z.object({
   PORT: z.string().regex(/^\d+$/).transform(Number),
   SOCKET_SECRET: z.string(),
   MONGO_URI: z.string().url(),
+  // TEST_MONGO_URI: z.string().url(),
   SWAGGER_BASE_URL: z.string(),
 });
 

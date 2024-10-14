@@ -1,0 +1,19 @@
+services:  
+  app:    
+    build: .    
+    ports:      
+      - '8000:8000'    
+    environment:      
+      MONGO_URI: mongodb://mongo:27015/socialnet_express    
+    depends_on:      
+      - mongo    
+    volumes:      
+      - .:/app  
+  mongo:    
+    image: mongo:latest    
+    volumes:      
+      - mongo-data:/data/db    
+    ports:      
+      - '27015:27015'
+volumes:  
+  mongo-data:
