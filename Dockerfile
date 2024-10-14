@@ -1,39 +1,35 @@
-# Stage 1: Build the application
-FROM node:18-alpine AS build
+# Use an official Node.js runtime as a parent image
+FROM node:latest as builder
 
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
+
 RUN npm install
 
-# Copy the rest of the application code
+# Copy all files from the current directory to the working directory
 COPY . .
 
-# Build the TypeScript code and output compiled JS to the root directory
-RUN npx tsc --outDir .
+# Create js files
+RUN npx tsc
 
-# Debug: Verify that index.js is created
-RUN ls -l /app/index.js  # Check if the file exists
+# Development stage
+FROM builder as development
+# Set NODE_ENV to development
+ENV NODE_ENV=development
 
-# Stage 2: Create a smaller image for the app
-FROM node:18-alpine
-
-# Set the working directory
-WORKDIR /app
-
-# Copy only the necessary files from the build stage
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/index.js ./  
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/*.json ./    
-
-# Install only production dependencies
-RUN npm install --only=production
-
-# Expose the port your app listens on (e.g., 8000)
+# Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run your app
-CMD ["node", "index.js"]
+# Command to run the application(in development)
+CMD ["npm", "run", "dev"]
+
+# Production stage
+FROM builder as production
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+# Run the production command
+CMD ["npm", "start"]

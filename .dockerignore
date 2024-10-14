@@ -1,2 +1,5 @@
-# Ignore node modules, they will be installed inside the container
 node_modules
+npm-debug.log
+Dockerfile
+docker-compose.yml
+.git
