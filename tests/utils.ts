@@ -1,5 +1,7 @@
 import supertest from 'supertest';
 
+const BASE_URL = "/api/v7"
+
 const testGet = (api: supertest.SuperTest<supertest.Test>, endpoint: string) => api.get(`/api/v8${endpoint}`);
 const testPost = (api: supertest.SuperTest<supertest.Test>, endpoint: string, data: Record<string, any>) => api.post(`/api/v8${endpoint}`).send(data);
 
@@ -61,4 +63,4 @@ const testPost = (api: supertest.SuperTest<supertest.Test>, endpoint: string, da
 //     return api.put(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
 // };
 
-export { testGet, testPost }
+export { BASE_URL }

@@ -61,8 +61,10 @@ const app: any = express();
 expressWs(app)
 app.use(express.json());
 
-// Connect DB
-connectDB()
+if (env.NODE_ENV !== 'test') {
+  // Connect DB
+  connectDB()
+}
 
 // Register Routes
 app.use("/api/v7/general", generalRouter)

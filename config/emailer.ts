@@ -68,7 +68,7 @@ export const sendEmail = async (type: "activate" | "reset" | "reset-success" | "
     const htmlContent = readTemplate(templatePath, context);
 
     const mailOptions = {
-        from: process.env.SMTP_EMAIL,
+        from: ENV.DEFAULT_FROM_EMAIL,
         to: user.email,
         subject,
         html: htmlContent,
