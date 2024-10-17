@@ -76,8 +76,10 @@ app.ws("/api/v7/ws/notifications", authWsMiddleware, notificationSocket)
 app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.listen(env.PORT, () => {
-  console.log(`${env.SITE_NAME} server is running on port ${env.PORT}`);
-  console.log(`Connected to MongoDB at ${env.MONGO_URI}`);
-});
-
+if (env.NODE_ENV !== 'test') {
+  app.listen(env.PORT, () => {
+    console.log(`${env.SITE_NAME} server is running on port ${env.PORT}`);
+    console.log(`Connected to MongoDB at ${env.MONGO_URI}`);
+  });
+}
+export default app

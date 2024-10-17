@@ -22,3 +22,6 @@ run:
 
 init:
 	npm run seed
+
+test:
+	npx jest --detectOpenHandles

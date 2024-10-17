@@ -8,6 +8,7 @@ dotenv.config();
 const envSchema = z.object({
   SITE_NAME: z.string(),
   SECRET_KEY: z.string(),
+  NODE_ENV: z.string(),
   EMAIL_OTP_EXPIRE_SECONDS: z.string().transform(Number),
   ACCESS_TOKEN_EXPIRY: z.string().transform(Number),
   REFRESH_TOKEN_EXPIRY: z.string().transform(Number),
@@ -30,7 +31,6 @@ const envSchema = z.object({
   PORT: z.string().regex(/^\d+$/).transform(Number),
   SOCKET_SECRET: z.string(),
   MONGO_URI: z.string().url(),
-  // TEST_MONGO_URI: z.string().url(),
   SWAGGER_BASE_URL: z.string(),
 });
 

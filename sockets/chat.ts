@@ -87,6 +87,7 @@ const chatSocket = async (ws: WebSocket, req: Request) => {
 }
 
 export const sendMessageDeletionInSocket = (secured: boolean, host: string, chatId: string, messageId: string) => {
+    if (ENV.NODE_ENV === "test") return
     const websocketScheme = secured ? "wss://" : "ws://"
     const websocketUri = `${websocketScheme}${host}/api/v7/ws/chats/${chatId}`
     const socket = new WebSocketClient(websocketUri, { headers: { Authorization: ENV.SOCKET_SECRET } })

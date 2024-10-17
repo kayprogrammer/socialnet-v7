@@ -1,5 +1,4 @@
 import * as cloudinary from 'cloudinary';
-import { promisify } from 'util';
 import * as mime from 'mime-types';
 import ENV from './config';
 
@@ -36,16 +35,6 @@ class FileProcessor {
         } catch (error) {
             console.error(error);
             return null;
-        }
-    }
-
-    static async uploadFile(file: Express.Multer.File, key: string, folder: string): Promise<void> {
-        const publicId = `${BASE_FOLDER}${folder}/${key}`;
-
-        try {
-            await cloudinary.v2.uploader.upload(file.path, { public_id: publicId, overwrite: true, faces: true });
-        } catch (error) {
-            console.error(error);
         }
     }
 }

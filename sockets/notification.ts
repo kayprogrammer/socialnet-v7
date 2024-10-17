@@ -45,6 +45,7 @@ const notificationSocket = async (ws: WebSocket, req: Request) => {
 }
 
 export const sendNotificationInSocket = (secured: boolean, host: string, notification: INotification, status: SOCKET_STATUS_CHOICES = SOCKET_STATUS_CHOICES.CREATED) => {
+    if (ENV.NODE_ENV === "test") return
     const websocketScheme = secured ? "wss://" : "ws://"
     const websocketUri = `${websocketScheme}${host}/api/v7/ws/notifications`
     let notificationData = { id: notification.id.toString(), status: status, nType: notification.nType }

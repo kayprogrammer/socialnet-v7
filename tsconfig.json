@@ -10,12 +10,20 @@
     "emitDecoratorMetadata": true,  // Emit decorator metadata
     "sourceMap": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": false, // Important for older versions
     "noImplicitAny": true,
     "skipLibCheck": true,
-    "typeRoots": ["./types", "./node_modules/@types"]
-    
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "types": ["jest"] // Ensure Jest types are included
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./**/*.ts",         // Include all TypeScript files
+    "./tests/**/*.test.ts"  // Specifically include test files
+  ],
+  "exclude": [
+    "node_modules", 
+    "dist",           // Exclude compiled files
+    "coverage"        // If you're generating coverage reports
+  ]
 }
