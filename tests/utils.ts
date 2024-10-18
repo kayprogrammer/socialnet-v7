@@ -1,6 +1,6 @@
-import { createAccessToken, createRefreshToken, createUser } from "../managers/users"
+import { createAccessToken, createRefreshToken, createUser, shortUserPopulation } from "../managers/users"
 import { IUser, User } from "../models/accounts"
-import { IPost, Post } from "../models/feed"
+import { IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
 
 const BASE_URL = "/api/v7"
 
@@ -18,11 +18,11 @@ const testVerifiedUser = async (): Promise<IUser> => {
     return user
 }
 
-const testPost = async (): Promise<IPost> => {
-    const author = await testVerifiedUser()
-    const post = await Post.create({ text: "This is a new post", author: author._id})
-    post.author = author
-    return post
+const testAnotherVerifiedUser = async (): Promise<IUser> => {
+    let userData = { firstName: "TestAnother", lastName: "UserVerified", email: "testanotheruserverified@example.com", password: "testanotheruserverified" }
+    let user = await User.findOne({ email: userData.email })
+    if (!user) user = await createUser(userData, true)
+    return user
 }
 
 const testTokens = async (user: IUser): Promise<{access: string, refresh: string}> => {
@@ -36,51 +36,27 @@ const testTokens = async (user: IUser): Promise<{access: string, refresh: string
     return tokens
 }
 
-// export const authTestGet = async (
-//     api: supertest.SuperTest<supertest.Test>, 
-//     endpoint: string,
-//     authService: AuthService, 
-//     userService: UserService, 
-//     user: Record<string,any>
-// ): Promise<supertest.Test> => {
-//     const access = await setAuth(authService, userService, user)
-//     return api.get(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`)
-// };
+const testPost = async (): Promise<IPost> => {
+    const author = await testVerifiedUser()
+    const post = await Post.create({ text: "This is a new post", author: author._id})
+    post.author = author
+    return post
+}
 
-// export const authTestPost = async (
-//     api: supertest.SuperTest<supertest.Test>, 
-//     endpoint: string,
-//     authService: AuthService, 
-//     userService: UserService, 
-//     user: Record<string,any>,
-//     data: Record<string,any>
-// ): Promise<supertest.Test> => {
-//     const access = await setAuth(authService, userService, user)
-//     return api.post(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
-// };
+const testReaction = async (post: IPost) => {
+    const reactions = [{rType: REACTION_CHOICES_ENUM.LIKE, user: post.author._id}] 
+    post = await Post.findOneAndUpdate({ _id: post._id }, { reactions }, { new: true }).populate(shortUserPopulation("reactions.user")) as IPost
+    return post.reactions[0]
+}
 
-// export const authTestPatch = async (
-//     api: supertest.SuperTest<supertest.Test>, 
-//     endpoint: string,
-//     authService: AuthService, 
-//     userService: UserService, 
-//     user: Record<string,any>,
-//     data: Record<string,any>
-// ): Promise<supertest.Test> => {
-//     const access = await setAuth(authService, userService, user)
-//     return api.patch(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
-// };
+const paginatedTestData = (dataKey: string, data: Record<string,any>) => {
+    return {
+        itemsCount: 1,
+        itemsPerPage: 100, 
+        page: 1, 
+        [dataKey]: [data], 
+        totalPages: 1
+    }
+}
 
-// export const authTestPut = async (
-//     api: supertest.SuperTest<supertest.Test>, 
-//     endpoint: string,
-//     authService: AuthService, 
-//     userService: UserService, 
-//     user: Record<string,any>,
-//     data: Record<string,any>
-// ): Promise<supertest.Test> => {
-//     const access = await setAuth(authService, userService, user)
-//     return api.put(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
-// };
-
-export { BASE_URL, testUser, testVerifiedUser, testTokens, testPost }
+export { BASE_URL, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, paginatedTestData }

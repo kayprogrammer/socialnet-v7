@@ -7,7 +7,7 @@ import { ErrorCode, NotFoundError, RequestError, ValidationErr } from "../config
 import { authMiddleware, authOrGuestMiddleware } from "../middlewares/auth";
 import { validationMiddleware } from "../middlewares/error";
 import { File } from "../models/base";
-import { checkPassword, shortUserPopulation } from "../managers/users";
+import { checkPassword } from "../managers/users";
 import FileProcessor from "../config/file_processors";
 import { findFriends, findRequesteeAndFriendObj, findUsersSortedByProximity, notificationPopulationData } from "../managers/profiles";
 import { Friend, FRIEND_REQUEST_STATUS_CHOICES, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles";

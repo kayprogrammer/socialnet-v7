@@ -243,7 +243,7 @@ describe('AuthRoutes', () => {
 
     // Test for successful refresh
     const tokens = await testTokens(user)
-    res = await requestApp.get(`${baseUrl}/logout`).set('Authorization', `Bearer ${tokens.access}`);;
+    res = await requestApp.get(`${baseUrl}/logout`).set('Authorization', `Bearer ${tokens.access}`);
     expect(res.statusCode).toBe(200)
     respBody = res.body;
     expect(respBody).toMatchObject({ status: "success", message: "Logout successful" });

@@ -5,8 +5,7 @@ import { IUser } from "../models/accounts";
 
 const getPostOrComment = async (slug: string): Promise<IPost | IComment | null> => {
     const post = await Post.findOne({ slug }).populate(shortUserPopulation("reactions.user"))
-    let comment = null
-    if (!post) comment = await Comment.findOne({ slug }).populate(shortUserPopulation("reactions.user"))
+    const comment = !post ? await Comment.findOne({ slug }).populate(shortUserPopulation("reactions.user")) : null;
     return post || comment
 }
 
