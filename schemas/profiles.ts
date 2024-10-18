@@ -33,6 +33,7 @@ export class ProfileSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     dob?: Date;
 
     @Example("Lagos")
@@ -41,10 +42,12 @@ export class ProfileSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 

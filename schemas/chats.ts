@@ -51,10 +51,12 @@ export class ChatSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 
@@ -81,10 +83,12 @@ export class MessageSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 
@@ -241,10 +245,12 @@ export class GroupChatSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 

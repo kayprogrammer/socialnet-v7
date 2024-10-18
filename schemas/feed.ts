@@ -35,10 +35,12 @@ export class PostSchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 
@@ -112,10 +114,12 @@ export class ReplySchema {
 
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     createdAt?: Date;
     
     @Example(DATETIME_EXAMPLE)
     @Expose()
+    @Type(() => String)
     updatedAt?: Date;
 }
 

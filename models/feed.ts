@@ -68,6 +68,8 @@ PostSchema.virtual('commentsCount', {
         },
     },
     count: true,
+}).get(function(value) {
+    return value === undefined ? 0 : value;
 });
 
 

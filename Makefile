@@ -24,4 +24,4 @@ init:
 	npm run seed
 
 test:
-	npx jest --detectOpenHandles
+	npm run test

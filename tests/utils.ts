@@ -1,9 +1,28 @@
-import supertest from 'supertest';
+import { createUser } from "../managers/users"
+import { IUser, User } from "../models/accounts"
+import { IPost, Post } from "../models/feed"
 
 const BASE_URL = "/api/v7"
 
-const testGet = (api: supertest.SuperTest<supertest.Test>, endpoint: string) => api.get(`/api/v8${endpoint}`);
-const testPost = (api: supertest.SuperTest<supertest.Test>, endpoint: string, data: Record<string, any>) => api.post(`/api/v8${endpoint}`).send(data);
+const testUser = async () => {
+    let userData = { firstName: "Test", lastName: "User", email: "testuser@example.com", password: "testuser" }
+    let user = await User.findOne({ email: userData.email })
+    if (!user) user = await createUser(userData)
+}
+
+const testVerifiedUser = async (): Promise<IUser> => {
+    let userData = { firstName: "Test", lastName: "UserVerified", email: "testuserverified@example.com", password: "testuserverified" }
+    let user = await User.findOne({ email: userData.email })
+    if (!user) user = await createUser(userData, true)
+    return user
+}
+
+const testPost = async (): Promise<IPost> => {
+    const author = await testVerifiedUser()
+    const post = await Post.create({ text: "This is a new post", author: author._id})
+    post.author = author
+    return post
+}
 
 // const setAuth = async (
 //     authService: AuthService, 
@@ -63,4 +82,4 @@ const testPost = (api: supertest.SuperTest<supertest.Test>, endpoint: string, da
 //     return api.put(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
 // };
 
-export { BASE_URL }
+export { BASE_URL, testUser, testVerifiedUser, testPost }

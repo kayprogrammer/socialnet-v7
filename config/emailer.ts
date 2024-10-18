@@ -63,6 +63,7 @@ const getEmailDetails = async (type: "activate" | "reset" | "reset-success" | "w
  * @throws {Error} - Throws an error if sending the email fails.
  */
 export const sendEmail = async (type: "activate" | "reset" | "reset-success" | "welcome", user: any): Promise<void> => {
+    if (ENV.NODE_ENV === "test") return
     const { templatePath, subject, context } = await getEmailDetails(type, user);
 
     const htmlContent = readTemplate(templatePath, context);

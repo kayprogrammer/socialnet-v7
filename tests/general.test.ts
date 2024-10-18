@@ -10,11 +10,6 @@ describe('GeneralRoute', () => {
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
-
-    if (mongoose.connection.readyState !== 0) {
-      // Disconnect from any existing connection before establishing a new one
-      await mongoose.disconnect();
-    }
     await mongoose.connect(uri);
   });
 
@@ -36,5 +31,3 @@ describe('GeneralRoute', () => {
     }
   });
 });
-
-jest.setTimeout(10000)
