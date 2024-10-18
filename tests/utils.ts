@@ -1,4 +1,4 @@
-import { createUser } from "../managers/users"
+import { createAccessToken, createRefreshToken, createUser } from "../managers/users"
 import { IUser, User } from "../models/accounts"
 import { IPost, Post } from "../models/feed"
 
@@ -8,6 +8,7 @@ const testUser = async () => {
     let userData = { firstName: "Test", lastName: "User", email: "testuser@example.com", password: "testuser" }
     let user = await User.findOne({ email: userData.email })
     if (!user) user = await createUser(userData)
+    return user
 }
 
 const testVerifiedUser = async (): Promise<IUser> => {
@@ -24,16 +25,16 @@ const testPost = async (): Promise<IPost> => {
     return post
 }
 
-// const setAuth = async (
-//     authService: AuthService, 
-//     userService: UserService, 
-//     user: Record<string,any>
-// ): Promise<string> => {
-//     const access = authService.createAccessToken({userId: user.id})
-//     const refresh = authService.createRefreshToken() 
-//     await userService.update({id: user.id, access: access, refresh: refresh})
-//     return access
-// }
+const testTokens = async (user: IUser): Promise<{access: string, refresh: string}> => {
+    const access = createAccessToken(user.id) 
+    const refresh = createRefreshToken() 
+    const tokens = { access, refresh }
+    await User.updateOne(
+        { _id: user._id },
+        { $set: { "tokens": tokens } }
+    )
+    return tokens
+}
 
 // export const authTestGet = async (
 //     api: supertest.SuperTest<supertest.Test>, 
@@ -82,4 +83,4 @@ const testPost = async (): Promise<IPost> => {
 //     return api.put(`/api/v8${endpoint}`).set("authorization", `Bearer ${access}`).send(data)
 // };
 
-export { BASE_URL, testUser, testVerifiedUser, testPost }
+export { BASE_URL, testUser, testVerifiedUser, testTokens, testPost }

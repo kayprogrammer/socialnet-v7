@@ -62,9 +62,9 @@ authRouter.post('/verify-email', validationMiddleware(VerifyEmailSchema), async 
         if (user.isEmailVerified) return res.status(200).json(CustomResponse.success("Email already verified"))
     
         // Verify otp
-        let currentDate = new Date() 
+        const currentDate = new Date() 
         if (user.otp !== otp || currentDate > user.otpExpiry) throw new RequestError("Otp is invalid or expired", 400, ErrorCode.INVALID_OTP)
-        
+
         // Update user
         await User.updateOne(
             { _id: user._id },
@@ -100,7 +100,6 @@ authRouter.post('/resend-verification-email', validationMiddleware(EmailSchema),
         const { email } = userData;
         const user = await User.findOne({ email })
         if (!user) throw new NotFoundError("Incorrect email!")
-
         if (user.isEmailVerified) return res.status(200).json(CustomResponse.success("Email already verified"))
 
         // Send otp email
@@ -209,7 +208,7 @@ authRouter.post('/refresh', validationMiddleware(RefreshTokenSchema), async (req
         const refresh = createRefreshToken() 
 
         // Update user with access tokens
-        let tokens = { access, refresh }
+        const tokens = { access, refresh }
         await User.updateOne(
             { _id: user._id, "tokens.refresh": refreshToken },
             { $set: { "tokens.$": tokens } }
@@ -234,7 +233,7 @@ authRouter.get('/logout', authMiddleware, async (req: Request, res: Response, ne
             { _id: user._id, "tokens.access": token },
             { $pull: { tokens: { access: token } } }
         );
-        return res.status(200).json(CustomResponse.success("Logout Successful"))
+        return res.status(200).json(CustomResponse.success("Logout successful"))
     } catch (error) {
         next(error)
     }

@@ -16,26 +16,15 @@ const checkPassword = async (user: IUser, password: string) => {
 
 const createUser = async (userData: Record<string,any>, isEmailVerified: boolean = false, isStaff: boolean = false) => {
     const { password, ...otherUserData } = userData;
-
     const hashedPassword = await hashPassword(password);
-    const otpExpiry = new Date(new Date().getTime() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000);
-    const newUser = await User.create({ password: hashedPassword, isStaff, isEmailVerified, otpExpiry, ...otherUserData });
+    const newUser = await User.create({ password: hashedPassword, isStaff, isEmailVerified, ...otherUserData });
     return newUser; 
 };
 
 const createOtp = async (user: IUser): Promise<number> => {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
     const otpExpiry = new Date(Date.now() + ENV.EMAIL_OTP_EXPIRE_SECONDS * 1000); // OTP expiry in 15 minutes
-
-    try {
-        await User.updateOne(
-            { _id: user._id },
-            { $set: { otp, otpExpiry } }
-        );
-    } catch (error) {
-        console.error('Error updating OTP and expiry:', error);
-        throw error;
-    }
+    await User.updateOne({ _id: user._id }, { $set: { otp, otpExpiry } });
     return otp
 };
 
