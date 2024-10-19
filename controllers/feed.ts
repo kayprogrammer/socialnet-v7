@@ -70,7 +70,7 @@ feedRouter.post('/posts', authMiddleware, validationMiddleware(PostCreateSchema)
  */
 feedRouter.get('/posts/:slug', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let post = await Post.findOne({ slug: req.params.slug }).populate([shortUserPopulation("author"), "image"])
+        let post = await Post.findOne({ slug: req.params.slug }).populate([shortUserPopulation("author"), "image", "commentsCount"])
         if (!post) throw new NotFoundError("Post does not exist")
         return res.status(200).json(
             CustomResponse.success(
@@ -331,7 +331,7 @@ feedRouter.put('/comments/:slug', authMiddleware, validationMiddleware(CommentCr
         const user = req.user;
         let comment = await Comment.findOne({ slug: req.params.slug, parent: null }).populate([shortUserPopulation("author"), "replies"])
         if (!comment) throw new NotFoundError("Comment does not exist")
-        if (comment.author.id !== user.id) throw new RequestError("Comment is not yours to update", 400, ErrorCode.INVALID_OWNER) 
+        if (comment.author.id !== user.id) throw new RequestError("Comment is not yours to edit", 400, ErrorCode.INVALID_OWNER) 
         const { text } = req.body;
         comment.text = text
         await comment.save()
@@ -396,7 +396,7 @@ feedRouter.put('/replies/:slug', authMiddleware, validationMiddleware(CommentCre
         const user = req.user;
         const reply = await Comment.findOne({ slug: req.params.slug, parent: { $ne: null } }).populate(shortUserPopulation("author"))
         if (!reply) throw new NotFoundError("Reply does not exist")
-        if (reply.author.id !== user.id) throw new RequestError("Reply is not yours to update", 400, ErrorCode.INVALID_OWNER) 
+        if (reply.author.id !== user.id) throw new RequestError("Reply is not yours to edit", 400, ErrorCode.INVALID_OWNER) 
         const { text } = req.body;
         reply.text = text
         await reply.save()

@@ -1,6 +1,6 @@
 import { createAccessToken, createRefreshToken, createUser, shortUserPopulation } from "../managers/users"
 import { IUser, User } from "../models/accounts"
-import { IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
+import { Comment, IComment, IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
 
 const BASE_URL = "/api/v7"
 
@@ -49,6 +49,20 @@ const testReaction = async (post: IPost) => {
     return post.reactions[0]
 }
 
+const testComment = async (post: IPost): Promise<IComment> => {
+    const author = await testVerifiedUser()
+    const comment = await Comment.create({ text: "This is a new comment", post: post._id, author: author._id})
+    comment.author = author
+    return comment
+}
+
+const testReply = async (comment: IComment): Promise<IComment> => {
+    const author = await testVerifiedUser()
+    const reply = await Comment.create({ text: "This is a new comment", parent: comment._id, post: comment.post, author: author._id})
+    reply.author = author
+    return reply
+}
+
 const paginatedTestData = (dataKey: string, data: Record<string,any>) => {
     return {
         itemsCount: 1,
@@ -59,4 +73,4 @@ const paginatedTestData = (dataKey: string, data: Record<string,any>) => {
     }
 }
 
-export { BASE_URL, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, paginatedTestData }
+export { BASE_URL, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, testComment, testReply, paginatedTestData }
