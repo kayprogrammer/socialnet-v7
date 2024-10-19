@@ -62,7 +62,7 @@ describe('FeedRoutes', () => {
     expect(respBody).toMatchObject({
       status: "success",
       message: "Posts fetched",
-      data: paginatedTestData("posts", convertSchemaData(PostSchema, post))
+      data: paginatedTestData("posts", convertSchemaData(PostSchema, [post]))
     });
   });
 
@@ -198,7 +198,7 @@ describe('FeedRoutes', () => {
     expect(respBody).toMatchObject({
       status: "success",
       message: "Reactions fetched",
-      data: paginatedTestData("reactions", convertSchemaData(ReactionSchema, reaction))
+      data: paginatedTestData("reactions", convertSchemaData(ReactionSchema, [reaction]))
     });
   });
 
@@ -261,7 +261,7 @@ describe('FeedRoutes', () => {
     expect(respBody).toMatchObject({
       status: "success",
       message: "Comments fetched",
-      data: paginatedTestData("comments", convertSchemaData(CommentSchema, comment)) 
+      data: paginatedTestData("comments", convertSchemaData(CommentSchema, [comment])) 
     });
   });
 
@@ -312,7 +312,7 @@ describe('FeedRoutes', () => {
       message: "Comment with replies fetched",
       data: {
         comment: convertSchemaData(CommentSchema, comment),
-        replies: paginatedTestData("items", convertSchemaData(ReplySchema, reply))
+        replies: paginatedTestData("items", convertSchemaData(ReplySchema, [reply]))
       }
     });
   });

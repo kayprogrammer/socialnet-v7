@@ -1,9 +1,21 @@
 import { createAccessToken, createRefreshToken, createUser, shortUserPopulation } from "../managers/users"
-import { IUser, User } from "../models/accounts"
+import { City, Country, ICity, IState, IUser, State, User } from "../models/accounts"
 import { Comment, IComment, IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
 
+// GENERAL UTIL------------------------------------
 const BASE_URL = "/api/v7"
+const paginatedTestData = (dataKey: string, data: Record<string,any>) => {
+    return {
+        itemsCount: expect.any(Number),
+        itemsPerPage: 100, 
+        page: 1, 
+        [dataKey]: data, 
+        totalPages: 1
+    }
+}
+// ---------------------------------------------------
 
+// USERS AND AUTH------------
 const testUser = async () => {
     let userData = { firstName: "Test", lastName: "User", email: "testuser@example.com", password: "testuser" }
     let user = await User.findOne({ email: userData.email })
@@ -35,7 +47,9 @@ const testTokens = async (user: IUser): Promise<{access: string, refresh: string
     )
     return tokens
 }
+// -----------------------------------
 
+// FEED UTILS------------------------
 const testPost = async (): Promise<IPost> => {
     const author = await testVerifiedUser()
     const post = await Post.create({ text: "This is a new post", author: author._id})
@@ -62,15 +76,28 @@ const testReply = async (comment: IComment): Promise<IComment> => {
     reply.author = author
     return reply
 }
+// --------------------------------------------------------
 
-const paginatedTestData = (dataKey: string, data: Record<string,any>) => {
-    return {
-        itemsCount: 1,
-        itemsPerPage: 100, 
-        page: 1, 
-        [dataKey]: [data], 
-        totalPages: 1
-    }
+// PROFILES UTIL-------------------------------------------
+const testCity = async (): Promise<ICity> => {
+    const countryDataToCreate = { name: "Nigeria", code: "NG" }
+    let country = await Country.findOne(countryDataToCreate) 
+    if(!country) country = await Country.create(countryDataToCreate)
+    
+    const stateDataToCreate = { name: "Lagos", code: "LA", country_: country._id }
+    let state = await State.findOne(stateDataToCreate) 
+    if(!state) state = await State.create(stateDataToCreate)
+    state.country_ = country
+
+    const cityDataToCreate = { name: "Lekki", state_: state._id }
+    let city = await City.findOne(cityDataToCreate) 
+    if(!city) city = await City.create(cityDataToCreate)
+    city.state_ = state
+    return city
 }
+// -------------------------------------------------------
 
-export { BASE_URL, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, testComment, testReply, paginatedTestData }
+// CHATS UTIL-------------------------------------
+// -----------------------------------------------
+
+export { BASE_URL, paginatedTestData, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, testComment, testReply, testCity }
