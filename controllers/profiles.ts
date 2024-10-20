@@ -170,7 +170,7 @@ profilesRouter.get('/friends', authMiddleware, async (req: Request, res: Respons
 profilesRouter.get('/friends/requests', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         let user = req.user;
-        let friendIds = await Friend.find({ requestee: user._id }).select("requester")
+        let friendIds = await Friend.find({ requestee: user._id, status: FRIEND_REQUEST_STATUS_CHOICES.PENDING }).select("requester")
         let friendIdList = friendIds.map(friend => friend.requester)
         let data = await paginateModel(req, User, { _id: { $in: friendIdList } }, ['city_', 'avatar'])
         let friendRequestsData = { users: data.items, ...data }
@@ -227,7 +227,7 @@ profilesRouter.put('/friends/requests', authMiddleware, validationMiddleware(Acc
         const { username, accepted } = req.body;
         const { friend } = await findRequesteeAndFriendObj(user, username, FRIEND_REQUEST_STATUS_CHOICES.PENDING)
         if (!friend) throw new NotFoundError("No pending friend request exist between you and that user")
-        if (friend.requester.toString() == user.id.toString()) throw new RequestError("You cannot accept or reject a friend request you sent", 403, ErrorCode.NOT_ALLOWED)
+        if (friend.requester.toString() == user.toString()) throw new RequestError("You cannot accept or reject a friend request you sent", 403, ErrorCode.NOT_ALLOWED)
         
         // Update or delete friend request based on status
         let message = "Accepted"

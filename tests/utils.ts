@@ -1,6 +1,7 @@
 import { createAccessToken, createRefreshToken, createUser, shortUserPopulation } from "../managers/users"
 import { City, Country, ICity, IState, IUser, State, User } from "../models/accounts"
 import { Comment, IComment, IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
+import { Friend, FRIEND_REQUEST_STATUS_CHOICES, IFriend, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles"
 
 // GENERAL UTIL------------------------------------
 const BASE_URL = "/api/v7"
@@ -95,9 +96,31 @@ const testCity = async (): Promise<ICity> => {
     city.state_ = state
     return city
 }
+
+const testFriend = async (requester: IUser, requestee: IUser, status: FRIEND_REQUEST_STATUS_CHOICES = FRIEND_REQUEST_STATUS_CHOICES.ACCEPTED): Promise<IFriend> => {
+    let friendData = { requester: requester.id, requestee: requestee.id };
+    let friend = await Friend.findOneAndUpdate(friendData, { status }, { new: true })
+    if (!friend) friend = await Friend.create({ status, ...friendData })
+    return friend
+}
+
+const testNotification = async (sender: IUser, receiver: IUser): Promise<INotification> => {
+    const post = await testPost()
+    const notificationData = { sender: sender.id, receiver: receiver.id, nType: NOTIFICATION_TYPE_CHOICES.REACTION, post: post.id, readBy: []};
+    const notification = await Notification.create(notificationData)
+    notification.sender = sender
+    notification.post = post
+    notification.isRead = false
+    return notification
+}
 // -------------------------------------------------------
 
 // CHATS UTIL-------------------------------------
 // -----------------------------------------------
 
-export { BASE_URL, paginatedTestData, testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, testPost, testReaction, testComment, testReply, testCity }
+export { 
+    BASE_URL, paginatedTestData, 
+    testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, 
+    testPost, testReaction, testComment, testReply, 
+    testCity, testFriend, testNotification
+}

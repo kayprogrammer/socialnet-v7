@@ -152,10 +152,6 @@ export class NotificationSchema {
     @Example(NOTIFICATION_TYPE_CHOICES.REACTION)
     nType?: string;
     
-    @Expose()
-    @Example("johndoe@example.com")
-    email?: string;
-
     @Example("John Doe reacted to your post")
     @Expose()
     message?: string;

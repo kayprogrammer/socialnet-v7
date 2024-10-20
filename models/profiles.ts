@@ -37,24 +37,19 @@ FriendSchema.pre('save', async function (next) {
 
   // Check if a reverse record already exists (bidirectional uniqueness)
   const existingFriend = await FriendModel.findOne({
-    requester: requestee,
-    requestee: requester
+    $or: [
+      { requester: requester, requestee: requestee },
+      { requester: requestee, requestee: requester }
+    ]
   });
-
-  if (existingFriend) {
+  if (existingFriend && this.isNew) {
     return next(new RequestError('Friendship already exists', 409, ErrorCode.NOT_ALLOWED));
   }
-
-  // Sort the requester and requestee so that (requester, requestee) and (requestee, requester) are treated the same
-  if (requester.toString() > requestee.toString()) {
-    // Swap requester and requestee if requester > requestee
-    this.requester = requestee;
-    this.requestee = requester;
-  }
-
   next();
 });
 
+FriendSchema.index({ requester: 1, requestee: 1 }, { unique: true });
+FriendSchema.index({ requestee: 1, requester: 1 }, { unique: true });
 
 // Create the Friend model
 const Friend = model<IFriend>('Friend', FriendSchema);
