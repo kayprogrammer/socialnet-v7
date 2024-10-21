@@ -35,7 +35,6 @@ const envSchema = zod_1.z.object({
     }),
     SOCKET_SECRET: zod_1.z.string(),
     MONGO_URI: zod_1.z.string().url(),
-    SWAGGER_BASE_URL: zod_1.z.string(),
 });
 // Validate and parse the environment variables
 const ENV = envSchema.parse(process.env);

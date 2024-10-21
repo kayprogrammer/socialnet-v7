@@ -32,7 +32,6 @@ const envSchema = z.object({
   }),
   SOCKET_SECRET: z.string(),
   MONGO_URI: z.string().url(),
-  SWAGGER_BASE_URL: z.string(),
 });
 
 // Validate and parse the environment variables
