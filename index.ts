@@ -16,6 +16,7 @@ import { authWsMiddleware } from './sockets/auth';
 import notificationSocket from './sockets/notification';
 import cors, { CorsOptions } from 'cors';
 import http from 'http';
+import ENV from './config/config';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -95,7 +96,7 @@ app.ws("/api/v7/ws/chats/:id", authWsMiddleware, chatSocket)
 app.ws("/api/v7/ws/notifications", authWsMiddleware, notificationSocket)
 
 app.use(handleError)
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { customCssUrl: ENV.SWAGGER_CSS }));
 
 if (env.NODE_ENV !== 'test') {
   if (!server.listening) {

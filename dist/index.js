@@ -21,6 +21,7 @@ const auth_3 = require("./sockets/auth");
 const notification_1 = __importDefault(require("./sockets/notification"));
 const cors_1 = __importDefault(require("cors"));
 const http_1 = __importDefault(require("http"));
+const config_2 = __importDefault(require("./config/config"));
 const swaggerDocument = {
     openapi: '3.0.0',
     info: {
@@ -95,7 +96,7 @@ app.use("/api/v7/chats", auth_2.authMiddleware, chats_1.default);
 app.ws("/api/v7/ws/chats/:id", auth_3.authWsMiddleware, chat_1.default);
 app.ws("/api/v7/ws/notifications", auth_3.authWsMiddleware, notification_1.default);
 app.use(error_1.handleError);
-app.use('/', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+app.use('/', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument, { customCssUrl: config_2.default.SWAGGER_CSS }));
 if (config_1.default.NODE_ENV !== 'test') {
     if (!server.listening) {
         server.listen(config_1.default.PORT, () => {

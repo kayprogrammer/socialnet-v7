@@ -32,6 +32,7 @@ const envSchema = z.object({
   }),
   SOCKET_SECRET: z.string(),
   MONGO_URI: z.string().url(),
+  SWAGGER_CSS: z.string().url().default("https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css")
 });
 
 // Validate and parse the environment variables
