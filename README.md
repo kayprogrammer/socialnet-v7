@@ -32,7 +32,7 @@
 #### In the root directory:
 - Install all dependencies
 ```bash
-    $ pip install -r requirements.txt
+    $ npm install
 ```
 - Create an `.env` file and copy the contents from the `.env.example` to the file and set the respective values.
 
