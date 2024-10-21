@@ -1,5 +1,6 @@
 import { createAccessToken, createRefreshToken, createUser, shortUserPopulation } from "../managers/users"
 import { City, Country, ICity, IState, IUser, State, User } from "../models/accounts"
+import { Chat, CHAT_TYPE_CHOICES, IChat, IMessage, Message } from "../models/chat"
 import { Comment, IComment, IPost, Post, REACTION_CHOICES_ENUM } from "../models/feed"
 import { Friend, FRIEND_REQUEST_STATUS_CHOICES, IFriend, INotification, Notification, NOTIFICATION_TYPE_CHOICES } from "../models/profiles"
 
@@ -116,11 +117,32 @@ const testNotification = async (sender: IUser, receiver: IUser): Promise<INotifi
 // -------------------------------------------------------
 
 // CHATS UTIL-------------------------------------
+const testDMChat = async (owner: IUser, member: IUser): Promise<IChat> => {
+    const chat = await Chat.create({ owner: owner.id, cType: CHAT_TYPE_CHOICES.DM, users: [member.id] })
+    chat.owner = owner
+    chat.latestMessage = null
+    return chat
+}
+const testGroupChat = async (owner: IUser, member: IUser): Promise<IChat> => {
+    const chat = await Chat.create({ name: "My chat", owner: owner.id, cType: CHAT_TYPE_CHOICES.GROUP, users: [member.id], description: "This is my chat description" })
+    chat.owner = owner
+    chat.latestMessage = null
+    chat.users = [member]
+    return chat
+}
+
+const testMessage = async (sender: IUser, chat: IChat): Promise<IMessage> => {
+    await Message.deleteMany({ chat: chat.id }) // Delete existing messages for a chat
+    const message = await Message.create({ chat: chat.id, sender: sender.id, text: "Here is my message" })
+    message.sender = sender
+    return message
+}
 // -----------------------------------------------
 
 export { 
     BASE_URL, paginatedTestData, 
     testUser, testVerifiedUser, testAnotherVerifiedUser, testTokens, 
     testPost, testReaction, testComment, testReply, 
-    testCity, testFriend, testNotification
+    testCity, testFriend, testNotification,
+    testDMChat, testGroupChat, testMessage
 }

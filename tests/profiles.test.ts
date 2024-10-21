@@ -9,7 +9,7 @@ import { CitySchema, NotificationSchema, ProfileSchema } from "../schemas/profil
 import { convertSchemaData } from "../config/utils";
 import { ErrorCode } from "../config/handlers";
 import { ID_EXAMPLE } from "../schemas/base";
-import { Friend, FRIEND_REQUEST_STATUS_CHOICES, IFriend, INotification } from "../models/profiles";
+import { Friend, FRIEND_REQUEST_STATUS_CHOICES, INotification } from "../models/profiles";
 import { createUser } from "../managers/users";
 
 describe('ProfilesRoutes', () => {

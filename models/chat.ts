@@ -86,6 +86,10 @@ MessageSchema.virtual('chatId').get(function(this: IMessage) {
     return this.chat.toString()
 });
 
+MessageSchema.methods.toString = function() {
+    return this.id
+}
+
 MessageSchema.pre('save', async function (next) {
     if (this.isNew) {
         // Update the chat so that the updated timestamp gets updated
