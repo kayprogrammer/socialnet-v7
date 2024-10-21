@@ -27,7 +27,6 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
-  REDIS_URL: z.string().url(),
   PORT: z.string().transform((val) => parseInt(val, 10)).refine((val) => !isNaN(val), {
     message: 'PORT must be a number',
   }),

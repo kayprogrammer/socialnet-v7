@@ -14,6 +14,7 @@ import expressWs from 'express-ws';
 import chatSocket from './sockets/chat';
 import { authWsMiddleware } from './sockets/auth';
 import notificationSocket from './sockets/notification';
+import cors, { CorsOptions } from 'cors';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -57,9 +58,25 @@ const swaggerDocument = {
   },
 };
 
+// CORS options
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+      // If no origin (like in some requests from Postman) or if the origin is in the allowed list
+      if (!origin || env.CORS_ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+          callback(null, true);
+      } else {
+          callback(new Error('Not allowed by CORS'));
+      }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'OPTIONS', 'DELETE'],  // Allowed HTTP methods
+  allowedHeaders: ['origin', 'content-type', 'accept', 'authorization', 'x-request-id'],  // Allowed headers
+  credentials: true,  // Enable CORS for credentials (cookies, auth headers)
+};
+
 const app: any = express();
 expressWs(app)
 app.use(express.json());
+app.use(cors(corsOptions));
 
 if (env.NODE_ENV !== 'test') {
   // Connect DB
