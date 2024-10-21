@@ -15,6 +15,7 @@ import chatSocket from './sockets/chat';
 import { authWsMiddleware } from './sockets/auth';
 import notificationSocket from './sockets/notification';
 import cors, { CorsOptions } from 'cors';
+import http from 'http';
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -75,6 +76,7 @@ const corsOptions: CorsOptions = {
 
 const app: any = express();
 expressWs(app)
+const server = http.createServer(app);
 app.use(express.json());
 app.use(cors(corsOptions));
 
@@ -96,9 +98,11 @@ app.use(handleError)
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 if (env.NODE_ENV !== 'test') {
-  app.listen(env.PORT, () => {
-    console.log(`${env.SITE_NAME} server is running on port ${env.PORT}`);
-    console.log(`Connected to MongoDB at ${env.MONGO_URI}`);
-  });
+  if (!server.listening) {
+    server.listen(env.PORT, () => {
+      console.log(`${env.SITE_NAME} server is running on port ${env.PORT}`);
+      console.log(`Connected to MongoDB at ${env.MONGO_URI}`);
+    });
+  }
 }
 export default app

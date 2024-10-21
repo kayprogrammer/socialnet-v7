@@ -20,6 +20,7 @@ const chat_1 = __importDefault(require("./sockets/chat"));
 const auth_3 = require("./sockets/auth");
 const notification_1 = __importDefault(require("./sockets/notification"));
 const cors_1 = __importDefault(require("cors"));
+const http_1 = __importDefault(require("http"));
 const swaggerDocument = {
     openapi: '3.0.0',
     info: {
@@ -78,6 +79,7 @@ const corsOptions = {
 };
 const app = (0, express_1.default)();
 (0, express_ws_1.default)(app);
+const server = http_1.default.createServer(app);
 app.use(express_1.default.json());
 app.use((0, cors_1.default)(corsOptions));
 if (config_1.default.NODE_ENV !== 'test') {
@@ -95,10 +97,12 @@ app.ws("/api/v7/ws/notifications", auth_3.authWsMiddleware, notification_1.defau
 app.use(error_1.handleError);
 app.use('/', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
 if (config_1.default.NODE_ENV !== 'test') {
-    app.listen(config_1.default.PORT, () => {
-        console.log(`${config_1.default.SITE_NAME} server is running on port ${config_1.default.PORT}`);
-        console.log(`Connected to MongoDB at ${config_1.default.MONGO_URI}`);
-    });
+    if (!server.listening) {
+        server.listen(config_1.default.PORT, () => {
+            console.log(`${config_1.default.SITE_NAME} server is running on port ${config_1.default.PORT}`);
+            console.log(`Connected to MongoDB at ${config_1.default.MONGO_URI}`);
+        });
+    }
 }
 exports.default = app;
 //# sourceMappingURL=index.js.map
