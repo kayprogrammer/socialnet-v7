@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Create js files
-RUN npx tsc
+RUN npx tsc && cp -R templates dist/templates
 
 # Development stage
 FROM builder as development
