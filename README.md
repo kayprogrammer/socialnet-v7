@@ -72,7 +72,7 @@ OR
 ```
 
 ## Docs
-#### API Url: [Socialnet Swagger Docs](https://socialnet-express.vercel.app/) 
+#### API Url: [Socialnet Swagger Docs](https://socialnet-express.fly.dev/) 
 
 ![alt text](https://github.com/kayprogrammer/socialnet-v7/blob/main/display/disp2.png?raw=true)
 
