@@ -76,8 +76,8 @@ const corsOptions: CorsOptions = {
 };
 
 const app: any = express();
-expressWs(app)
 const server = http.createServer(app);
+expressWs(app, server)
 app.use(express.json());
 app.use(cors(corsOptions));
 

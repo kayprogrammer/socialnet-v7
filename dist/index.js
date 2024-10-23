@@ -79,8 +79,8 @@ const corsOptions = {
     credentials: true, // Enable CORS for credentials (cookies, auth headers)
 };
 const app = (0, express_1.default)();
-(0, express_ws_1.default)(app);
 const server = http_1.default.createServer(app);
+(0, express_ws_1.default)(app, server);
 app.use(express_1.default.json());
 app.use((0, cors_1.default)(corsOptions));
 if (config_1.default.NODE_ENV !== 'test') {
