@@ -35,22 +35,26 @@ function generateSwaggerRequestExample(summary, schemaClass, contentType = "appl
         required: true
     };
 }
-function generateSwaggerExampleValue(summary, status, message, schemaClass, code) {
-    let responseValue = {
+function generateSwaggerExampleValue(summary, status, message, schemaClass, code, isArray = false) {
+    const responseValue = {
         status: status,
         message: message,
         ...(code && { code: code }),
-        ...(schemaClass && { data: generateSwaggerExampleFromSchema(schemaClass) })
     };
+    // If isArray is true, generate an array of examples
+    if (isArray && schemaClass) {
+        responseValue.data = [generateSwaggerExampleFromSchema(schemaClass)];
+    }
+    else if (schemaClass) {
+        responseValue.data = generateSwaggerExampleFromSchema(schemaClass);
+    }
     return {
         summary: summary,
         value: responseValue,
     };
 }
 function generateSwaggerResponseExample(description, status, message, schemaClass, code, isArray = false) {
-    let exampleValue = generateSwaggerExampleValue("An example response", status, message, schemaClass, code);
-    if (isArray)
-        exampleValue = [exampleValue];
+    let exampleValue = generateSwaggerExampleValue("An example response", status, message, schemaClass, code, isArray);
     return {
         description: description,
         content: {
