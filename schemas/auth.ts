@@ -67,6 +67,10 @@ export class TokensSchema {
     @Example(TOKEN_EXAMPLE)
     @Expose()
     refresh?: string;
+
+    @Example("john-doe")
+    @Expose()
+    username?: string;
 }
 
 export class RefreshTokenSchema {
