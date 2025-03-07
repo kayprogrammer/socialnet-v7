@@ -203,7 +203,7 @@ describe('AuthRoutes', () => {
     expect(respBody).toMatchObject({
       status: "success",
       message: "Login successful",
-      data: { access: expect.any(String), refresh: expect.any(String) }
+      data: { access: expect.any(String), refresh: expect.any(String), username: expect.any(String) }
     });
   });
 
@@ -226,7 +226,7 @@ describe('AuthRoutes', () => {
     expect(respBody).toMatchObject({
       status: "success",
       message: "Tokens refresh successful",
-      data: { access: expect.any(String), refresh: expect.any(String) }
+      data: { access: expect.any(String), refresh: expect.any(String), username: expect.any(String) }
     });
   });
 
