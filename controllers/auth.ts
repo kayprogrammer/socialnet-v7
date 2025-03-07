@@ -181,11 +181,12 @@ authRouter.post('/login', validationMiddleware(LoginSchema), async (req: Request
         const refresh = createRefreshToken() 
 
         // Update user with access tokens
-        let tokens = { access, refresh }
+        let tokens: Record<string,any> = { access, refresh }
         await User.updateOne(
             { _id: user._id },
             { $push: { tokens } }
         );
+        tokens.username = user.username
         return res.status(201).json(CustomResponse.success('Login successful', tokens, TokensSchema))
     } catch (error) {
         next(error)
@@ -213,6 +214,7 @@ authRouter.post('/refresh', validationMiddleware(RefreshTokenSchema), async (req
             { _id: user._id, "tokens.refresh": refreshToken },
             { $set: { "tokens.$": tokens } }
         );
+        tokens.username = user.username
         return res.status(201).json(CustomResponse.success('Tokens refresh successful', tokens, TokensSchema))
     } catch (error) {
         next(error)
