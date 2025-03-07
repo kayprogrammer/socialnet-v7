@@ -209,7 +209,7 @@ authRouter.post('/refresh', validationMiddleware(RefreshTokenSchema), async (req
         const refresh = createRefreshToken() 
 
         // Update user with access tokens
-        const tokens = { access, refresh }
+        const tokens: Record<string,any> = { access, refresh }
         await User.updateOne(
             { _id: user._id, "tokens.refresh": refreshToken },
             { $set: { "tokens.$": tokens } }
